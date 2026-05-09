@@ -1,0 +1,633 @@
+/* 메모장 느낌의 폰트 및 스타일 초기화 */
+@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+
+:root {
+  --bg-color: #f5f5f0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-color);
+  /* 약간 누런 종이색 */
+  font-family: 'Noto Sans KR', sans-serif;
+  color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 20px;
+  min-height: 100vh;
+  padding-top: 2rem;
+}
+
+#app {
+  width: 100%;
+  max-width: 800px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+  border: 1px solid #e0e0e0;
+}
+
+/* 메모장 왼쪽 빨간선 효과 */
+#app::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 45px;
+  width: 2px;
+  background-color: #fca5a5;
+  z-index: 0;
+}
+
+/* 헤더 영역 */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem 1.5rem 65px;
+  border-bottom: 2px solid #eaeaea;
+  position: relative;
+  z-index: 1;
+  background-color: #fff;
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nav-controls button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 0.5rem;
+  transition: color 0.2s;
+}
+
+.today-btn {
+  font-size: 1rem !important;
+  font-weight: 500;
+  border: 1px solid #ddd !important;
+  border-radius: 4px;
+  padding: 0.2rem 0.6rem !important;
+  margin: 0 5px;
+  background-color: #fdfdfd !important;
+}
+
+.today-btn:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.nav-controls button:hover {
+  color: #000;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+}
+
+.view-controls button {
+  padding: 0.4rem 1rem;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.view-controls button.active {
+  background: #f0f0f0;
+  font-weight: 500;
+  border-color: #999;
+}
+
+/* 메인 뷰 공통 스타일 */
+.view {
+  position: relative;
+  z-index: 1;
+  background-color: #fff;
+  padding-left: 65px;
+  padding-right: 30px;
+  padding-bottom: 3rem;
+  min-height: 600px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* 월간 뷰 (Monthly View) */
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 500;
+  margin-top: 20px;
+  margin-bottom: 15px;
+  color: #555;
+  background-color: #fff;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  background-color: #fff;
+}
+
+.calendar-day {
+  height: 90px;
+  border: 1px solid #eee;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.calendar-day:hover {
+  background-color: #fafafa;
+  border-color: #ccc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.calendar-day.empty {
+  border: none;
+  background: none;
+  cursor: default;
+  box-shadow: none;
+}
+
+.calendar-day .date-num {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+/* 월간 뷰 일정 미리보기 (최대 3줄) */
+.month-schedule-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.month-schedule-item {
+  font-family: 'Nanum Pen Script', cursive;
+  font-size: 1.1rem;
+  color: #444;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.month-schedule-more {
+  font-size: 1.2rem;
+  color: #777;
+  text-align: center;
+  letter-spacing: 2px;
+  line-height: 0.8;
+  margin-top: 2px;
+}
+
+/* 설정 모달 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  width: 320px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: #888;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 1.05rem;
+}
+
+.setting-item select {
+  padding: 0.3rem 0.5rem;
+  font-family: inherit;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.setting-item input[type="color"] {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 50px;
+  height: 30px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.setting-item.backup-restore {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.action-btn {
+  width: 100%;
+  padding: 8px;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  color: #333;
+}
+
+.action-btn:hover {
+  background: #e9ecef;
+}
+
+/* 주간 뷰 (Weekly View) */
+.weekly-list {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  margin-top: 25px;
+}
+
+.weekly-day {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.weekly-day-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: #333;
+  background-color: transparent;
+  width: 140px;
+  flex-shrink: 0;
+  margin-top: 5px;
+  /* 입력칸과 세로 위치를 살짝 맞춤 */
+}
+
+.weekly-day-header .sunday {
+  color: #e57373; /* 약간 붉은색 */
+}
+
+.weekly-day-header .saturday {
+  color: #64b5f6; /* 약간 파란색 */
+}
+
+.add-btn {
+  background: #fdfdfd;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
+  transition: all 0.2s;
+}
+
+.add-btn:hover {
+  background: #eee;
+  color: #000;
+}
+
+.schedule-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  /* 남은 공간 모두 차지 */
+}
+
+/* 손글씨 느낌 입력칸 */
+.schedule-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: none;
+  border-bottom: 1px solid #e0e0e0; /* 배경 줄무늬 대신 개별 밑줄 적용 */
+  background: transparent;
+  font-family: 'Nanum Pen Script', cursive;
+  font-size: 1.5rem;
+  color: #222;
+  outline: none;
+  /* 줄무늬 라인에 맞추기 위해 약간의 여백 조정 */
+  margin-top: 2px;
+}
+
+.schedule-input::placeholder {
+  color: #aaa;
+}
+
+/* 줄무늬 간격 (36px)에 텍스트 높이 맞춤 */
+.schedule-input {
+  line-height: 36px;
+  height: 36px;
+  padding: 0 5px;
+  padding-right: 70px; /* 툴바 공간 확보 */
+}
+
+/* 완료선 및 형광펜, 툴바, 드래그앤드롭 스타일 */
+.item-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+  cursor: grab;
+}
+
+.item-wrapper:active {
+  cursor: grabbing;
+}
+
+.item-wrapper.dragging {
+  opacity: 0.5;
+  background: #f9f9f9;
+}
+
+.item-wrapper.drag-over {
+  border-top: 2px solid #888;
+}
+
+.item-toolbar {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.item-wrapper:hover .item-toolbar {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toolbar-btn {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  background: #fff;
+}
+
+.toolbar-btn.check-btn {
+  color: #4caf50;
+  font-weight: bold;
+}
+
+.memo-item .item-toolbar {
+  display: none !important;
+}
+
+.color-btn.c-none { background: #fff; }
+.color-btn.c-yellow { background: #fff59d; border-color: #fff59d; }
+.color-btn.c-pink { background: #f48fb1; border-color: #f48fb1; }
+.color-btn.c-green { background: #a5d6a7; border-color: #a5d6a7; }
+
+/* 상태 적용 스타일 */
+.completed .schedule-input,
+.completed.memo-item .memo-title-input,
+.completed.memo-item .memo-content-textarea {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.hl-yellow { background: linear-gradient(transparent 50%, rgba(255, 245, 157, 0.6) 50%); }
+.hl-pink { background: linear-gradient(transparent 50%, rgba(244, 143, 177, 0.6) 50%); }
+.hl-green { background: linear-gradient(transparent 50%, rgba(165, 214, 167, 0.6) 50%); }
+
+/* 사이드 메모 패널 */
+#memo-panel {
+  width: 320px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+#memo-panel.hidden {
+  display: none !important;
+}
+
+.memo-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #eaeaea;
+  padding-bottom: 10px;
+}
+
+.memo-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+#add-memo-btn {
+  background: #fdfdfd;
+  border: 1px solid #ccc;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #555;
+  transition: all 0.2s;
+}
+
+#add-memo-btn:hover {
+  background: #eee;
+  color: #000;
+}
+
+#memo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.memo-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: #fff9c4; /* 포스트잇 느낌의 연노랑 */
+  padding: 12px;
+  border-radius: 4px;
+  box-shadow: 1px 2px 5px rgba(0,0,0,0.1);
+  border-left: 3px solid #fbc02d;
+  transition: all 0.2s;
+  cursor: grab;
+}
+
+.memo-item:active {
+  cursor: grabbing;
+}
+
+.memo-item.dragging {
+  opacity: 0.5;
+}
+
+.memo-item.drag-over {
+  border-top: 2px solid #888;
+}
+
+.memo-item .item-toolbar {
+  top: 15px;
+  right: 10px;
+  transform: none;
+}
+
+.memo-title-input {
+  border: none;
+  background: transparent;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: #333;
+  outline: none;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #e0c868;
+  padding-bottom: 4px;
+}
+
+.memo-title-input::placeholder, .memo-content-textarea::placeholder {
+  color: #a79c6d;
+}
+
+.memo-content-textarea {
+  border: none;
+  background: transparent;
+  font-family: 'Nanum Pen Script', cursive;
+  font-size: 1.3rem;
+  color: #444;
+  outline: none;
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.4;
+}
+
+/* 모바일 반응형 디자인 */
+@media (max-width: 850px) {
+  body {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    gap: 20px;
+  }
+  
+  #app {
+    width: 100%;
+  }
+
+  header {
+    padding: 1rem 1rem 1rem 40px;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  #app::before {
+    left: 20px;
+  }
+
+  .view {
+    padding-left: 40px;
+    padding-right: 15px;
+  }
+
+  #memo-panel {
+    width: 100%;
+    max-width: 800px;
+  }
+
+  .weekly-day {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .weekly-day-header {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}

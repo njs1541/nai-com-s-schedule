@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가벼운 메모장 스케줄러</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- 헤더 영역 (네비게이션 및 뷰 전환) -->
+    <header>
+      <div class="nav-controls">
+        <button id="prev-btn">&lt;</button>
+        <button id="today-btn" class="today-btn">오늘</button>
+        <h1 id="current-date-display">2026년 5월</h1>
+        <button id="next-btn">&gt;</button>
+      </div>
+      <div class="view-controls">
+        <button id="monthly-view-btn" class="active">월간</button>
+        <button id="weekly-view-btn">주간</button>
+        <button id="settings-btn" title="설정">⚙️</button>
+        <button id="memo-btn" title="메모">📝</button>
+      </div>
+    </header>
+
+    <!-- 월간 뷰 (Monthly View) -->
+    <main id="monthly-view" class="view">
+      <div class="calendar-grid-header">
+        <div>일</div>
+        <div>월</div>
+        <div>화</div>
+        <div>수</div>
+        <div>목</div>
+        <div>금</div>
+        <div>토</div>
+      </div>
+      <div id="calendar-grid" class="calendar-grid">
+        <!-- JS를 통해 달력 날짜들이 여기에 생성됩니다. -->
+      </div>
+    </main>
+
+    <!-- 주간 뷰 (Weekly View) -->
+    <main id="weekly-view" class="view hidden">
+      <div id="weekly-list" class="weekly-list">
+        <!-- JS를 통해 각 요일별 입력 영역이 생성됩니다. -->
+      </div>
+    </main>
+  </div>
+
+  <!-- 설정 레이어 (모달) -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>설정</h2>
+        <button id="close-settings-btn" class="close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="setting-item">
+          <label for="start-day-select">한주의 시작일:</label>
+          <select id="start-day-select">
+            <option value="0">일요일</option>
+            <option value="1">월요일</option>
+          </select>
+        </div>
+        <div class="setting-item">
+          <label for="bg-color-picker">배경 색상:</label>
+          <input type="color" id="bg-color-picker" value="#f5f5f0">
+        </div>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <div class="setting-item backup-restore">
+          <button id="backup-btn" class="action-btn">데이터 백업 (저장)</button>
+          <button id="restore-btn" class="action-btn">데이터 복구 (불러오기)</button>
+          <input type="file" id="restore-file-input" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 사이드 메모 패널 -->
+  <aside id="memo-panel" class="hidden">
+    <div class="memo-header">
+      <h2>메모장</h2>
+      <button id="add-memo-btn" title="메모 추가">+</button>
+    </div>
+    <div id="memo-list">
+      <!-- JS로 메모 항목이 추가됨 -->
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
