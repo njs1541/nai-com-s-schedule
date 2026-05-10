@@ -6,24 +6,92 @@ let scheduleData = JSON.parse(localStorage.getItem('scheduler_data')) || {}; // 
 let memoData = JSON.parse(localStorage.getItem('scheduler_memo_data')) || [];
 let holidayData = JSON.parse(localStorage.getItem('scheduler_holiday_data')) || {}; // 공휴일 데이터 추가
 
-// 데이터 마이그레이션 (기존 단순 문자열 -> 객체 구조)
-Object.keys(scheduleData).forEach(key => {
-  scheduleData[key] = scheduleData[key].map(item => {
-    if (typeof item === 'string') {
-      return { text: item, completed: false, color: 'none' };
+// 대한민국 공휴일 데이터 (2024~2027)
+const SYSTEM_HOLIDAYS = {
+  // 2024
+  "2024-01-01": "신정",
+  "2024-02-09": "설날", "2024-02-10": "설날", "2024-02-11": "설날", "2024-02-12": "대체공휴일(설날)",
+  "2024-03-01": "삼일절",
+  "2024-04-10": "제22대 국회의원 선거",
+  "2024-05-05": "어린이날", "2024-05-06": "대체공휴일(어린이날)",
+  "2024-05-15": "부처님오신날",
+  "2024-06-06": "현충일",
+  "2024-08-15": "광복절",
+  "2024-09-16": "추석", "2024-09-17": "추석", "2024-09-18": "추석",
+  "2024-10-03": "개천절",
+  "2024-10-09": "한글날",
+  "2024-12-25": "성탄절",
+  // 2025
+  "2025-01-01": "신정",
+  "2025-01-28": "설날", "2025-01-29": "설날", "2025-01-30": "설날",
+  "2025-03-01": "삼일절", "2025-03-03": "대체공휴일(삼일절)",
+  "2025-05-05": "어린이날/부처님오신날", "2025-05-06": "대체공휴일",
+  "2025-06-06": "현충일",
+  "2025-08-15": "광복절",
+  "2025-10-03": "개천절",
+  "2025-10-05": "추석", "2025-10-06": "추석", "2025-10-07": "추석", "2025-10-08": "대체공휴일(추석)",
+  "2025-10-09": "한글날",
+  "2025-12-25": "성탄절",
+  // 2026
+  "2026-01-01": "신정",
+  "2026-02-16": "설날", "2026-02-17": "설날", "2026-02-18": "설날",
+  "2026-03-01": "삼일절", "2026-03-02": "대체공휴일(삼일절)",
+  "2026-05-05": "어린이날",
+  "2026-05-24": "부처님오신날", "2026-05-25": "대체공휴일(부처님오신날)",
+  "2026-06-06": "현충일",
+  "2026-07-17": "제헌절",
+  "2026-08-15": "광복절", "2026-08-17": "대체공휴일(광복절)",
+  "2026-10-03": "개천절", "2026-10-05": "대체공휴일(개천절)",
+  "2026-09-24": "추석", "2026-09-25": "추석", "2026-09-26": "추석",
+  "2026-10-09": "한글날",
+  "2026-12-25": "성탄절",
+  // 2027
+  "2027-01-01": "신정",
+  "2027-02-06": "설날", "2027-02-07": "설날", "2027-02-08": "설날", "2027-02-09": "대체공휴일(설날)",
+  "2027-03-01": "삼일절",
+  "2027-05-05": "어린이날",
+  "2027-05-13": "부처님오신날",
+  "2027-06-06": "현충일",
+  "2027-07-17": "제헌절", "2027-07-19": "대체공휴일(제헌절)",
+  "2027-08-15": "광복절", "2027-08-16": "대체공휴일(광복절)",
+  "2027-10-03": "개천절", "2027-10-04": "대체공휴일(개천절)",
+  "2027-09-14": "추석", "2027-09-15": "추석", "2027-09-16": "추석",
+  "2027-10-09": "한글날",
+  "2027-12-25": "성탄절"
+};
+
+function checkIsHoliday(dateKey) {
+  if (holidayData[dateKey] !== undefined) {
+    return holidayData[dateKey];
+  }
+  return !!SYSTEM_HOLIDAYS[dateKey];
+}
+
+// 데이터 마이그레이션 (버전 체크를 통해 한 번만 실행)
+const APP_VERSION = '1.1';
+const currentSavedVersion = localStorage.getItem('scheduler_app_version');
+
+if (currentSavedVersion !== APP_VERSION) {
+  Object.keys(scheduleData).forEach(key => {
+    scheduleData[key] = scheduleData[key].map(item => {
+      if (typeof item === 'string') {
+        return { text: item, completed: false, color: 'none' };
+      }
+      return item;
+    });
+  });
+  localStorage.setItem('scheduler_data', JSON.stringify(scheduleData));
+
+  memoData = memoData.map(item => {
+    if (item.completed === undefined) {
+      return { ...item, completed: false, color: 'none' };
     }
     return item;
   });
-});
-localStorage.setItem('scheduler_data', JSON.stringify(scheduleData));
-
-memoData = memoData.map(item => {
-  if (item.completed === undefined) {
-    return { ...item, completed: false, color: 'none' };
-  }
-  return item;
-});
-localStorage.setItem('scheduler_memo_data', JSON.stringify(memoData));
+  localStorage.setItem('scheduler_memo_data', JSON.stringify(memoData));
+  
+  localStorage.setItem('scheduler_app_version', APP_VERSION);
+}
 
 // DOM 엘리먼트
 const currentDateDisplay = document.getElementById('current-date-display');
@@ -380,6 +448,8 @@ function handleDrop(e) {
 
 function handleDragEnd() {
   this.classList.remove('dragging');
+  // 모든 요소에서 drag-over 클래스 제거 (혹시 남을 경우 대비)
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
   draggedItem = null;
 }
 
@@ -599,7 +669,7 @@ function renderMonthlyView() {
     
     const currDayOfWeek = new Date(year, month, i).getDay();
     const dateKey = formatDateKey(year, month, i);
-    const isHoliday = holidayData[dateKey];
+    const isHoliday = checkIsHoliday(dateKey);
     
     let numClass = 'date-num';
     if (currDayOfWeek === 0 || isHoliday) {
@@ -610,7 +680,8 @@ function renderMonthlyView() {
       dayDiv.classList.add('is-saturday');
     }
     
-    dayDiv.innerHTML = `<div class="${numClass}">${i}</div>`;
+    const holidayName = SYSTEM_HOLIDAYS[dateKey];
+    dayDiv.innerHTML = `<div class="${numClass}">${i}${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ''}</div>`;
     const items = scheduleData[dateKey] || [];
     
     if (items.length > 0) {
@@ -653,7 +724,7 @@ function renderWeeklyView(weekStart) {
     const headerDiv = document.createElement('div');
     headerDiv.className = 'weekly-day-header';
     let dayClass = '';
-    const isHoliday = holidayData[dateKey];
+    const isHoliday = checkIsHoliday(dateKey);
     if (currDay.getDay() === 0 || isHoliday) dayClass = 'sunday';
     else if (currDay.getDay() === 6) dayClass = 'saturday';
     
@@ -685,11 +756,20 @@ function renderWeeklyView(weekStart) {
     });
 
     headerDiv.querySelector('.holiday-btn').addEventListener('click', () => {
-      if (holidayData[dateKey]) {
-        delete holidayData[dateKey];
+      const currentIsHoliday = checkIsHoliday(dateKey);
+      if (currentIsHoliday) {
+        // 현재 공휴일이면 -> 해제 (명시적으로 false 저장)
+        holidayData[dateKey] = false;
       } else {
+        // 현재 공휴일이 아니면 -> 지정 (명시적으로 true 저장)
         holidayData[dateKey] = true;
       }
+      
+      // 최적화: 기본 시스템 공휴일 값과 동일해지면 굳이 저장할 필요 없으므로 삭제
+      if (holidayData[dateKey] === !!SYSTEM_HOLIDAYS[dateKey]) {
+        delete holidayData[dateKey];
+      }
+      
       localStorage.setItem('scheduler_holiday_data', JSON.stringify(holidayData));
       render();
     });

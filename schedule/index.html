@@ -94,7 +94,7 @@
             <option value="'Jua', sans-serif">'Jua'</option>
           </select>
         </div>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 15px 0;">
+        <hr class="settings-divider">
         <div class="setting-item-column">
           <label for="banner-title-input">배너 제목:</label>
           <input type="text" id="banner-title-input" placeholder="스케줄러 제목 입력">
@@ -106,11 +106,11 @@
         <div class="setting-item-column">
           <label for="banner-file-input">배너 이미지 업로드:</label>
           <input type="file" id="banner-file-input" accept=".jpg, .jpeg, .png, .gif">
-          <button id="delete-banner-img-btn" class="action-btn" style="margin-top: 5px; font-size: 0.85rem; padding: 4px;">배너 이미지 삭제</button>
+          <button id="delete-banner-img-btn" class="action-btn banner-delete-btn">배너 이미지 삭제</button>
         </div>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <hr class="settings-divider wide">
         <div class="setting-item backup-restore">
-          <button id="reset-settings-btn" class="action-btn" style="color: #d32f2f; border-color: #ffcdd2; background: #fff8f8;">옵션값 초기화</button>
+          <button id="reset-settings-btn" class="action-btn danger-btn">옵션값 초기화</button>
           <button id="backup-btn" class="action-btn">데이터 백업 (저장)</button>
           <button id="restore-btn" class="action-btn">데이터 복구 (불러오기)</button>
           <input type="file" id="restore-file-input" accept=".json" style="display: none;">

@@ -40,6 +40,11 @@ body {
   gap: 20px;
   min-height: 100vh;
   padding-top: 2rem;
+  user-select: none; /* 텍스트 선택 방지 */
+}
+
+input, textarea {
+  user-select: text; /* 입력창은 선택 가능하게 허용 */
 }
 
 #app {
@@ -285,6 +290,14 @@ footer p {
   color: #90caf9; /* 연한 파랑 */
 }
 
+.holiday-name {
+  font-size: 0.75rem;
+  margin-left: 4px;
+  font-weight: normal;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 /* 월간 뷰 일정 미리보기 (최대 3줄) */
 .month-schedule-preview {
   display: flex;
@@ -435,16 +448,32 @@ footer p {
   filter: brightness(0.9);
 }
 
-#reset-settings-btn {
+#reset-settings-btn.danger-btn {
   color: #d32f2f !important;
   border-color: #ffcdd2 !important;
   background: #fff8f8 !important;
 }
 
-.dark-mode #reset-settings-btn {
+.dark-mode #reset-settings-btn.danger-btn {
   color: #ffab91 !important;
   border-color: #5d4037 !important;
   background: #3e2723 !important;
+}
+
+.banner-delete-btn {
+  margin-top: 5px;
+  font-size: 0.85rem !important;
+  padding: 4px !important;
+}
+
+.settings-divider {
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  margin: 15px 0;
+}
+
+.settings-divider.wide {
+  margin: 20px 0;
 }
 
 /* 주간 뷰 (Weekly View) */
