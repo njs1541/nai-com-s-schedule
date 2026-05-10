@@ -4,6 +4,7 @@ let currentView = 'monthly'; // 'monthly' 또는 'weekly'
 let startDayOfWeek = 0; // 주간 뷰의 시작 요일 (0: 일요일, 1: 월요일)
 let scheduleData = JSON.parse(localStorage.getItem('scheduler_data')) || {}; // 로컬스토리지에서 데이터 불러오기
 let memoData = JSON.parse(localStorage.getItem('scheduler_memo_data')) || [];
+let holidayData = JSON.parse(localStorage.getItem('scheduler_holiday_data')) || {}; // 공휴일 데이터 추가
 
 // 데이터 마이그레이션 (기존 단순 문자열 -> 객체 구조)
 Object.keys(scheduleData).forEach(key => {
@@ -43,6 +44,8 @@ const settingsBtn = document.getElementById('settings-btn');
 const settingsModal = document.getElementById('settings-modal');
 const closeSettingsBtn = document.getElementById('close-settings-btn');
 const bgColorPicker = document.getElementById('bg-color-picker');
+const fontSelect = document.getElementById('font-select');
+const resetSettingsBtn = document.getElementById('reset-settings-btn');
 
 const backupBtn = document.getElementById('backup-btn');
 const restoreBtn = document.getElementById('restore-btn');
@@ -52,6 +55,14 @@ const memoBtn = document.getElementById('memo-btn');
 const memoPanel = document.getElementById('memo-panel');
 const addMemoBtn = document.getElementById('add-memo-btn');
 const memoList = document.getElementById('memo-list');
+
+const bannerArea = document.getElementById('banner-area');
+const bannerImg = document.getElementById('banner-img');
+const bannerTitle = document.getElementById('banner-title');
+const bannerTitleInput = document.getElementById('banner-title-input');
+const bannerUrlInput = document.getElementById('banner-url-input');
+const bannerFileInput = document.getElementById('banner-file-input');
+const deleteBannerImgBtn = document.getElementById('delete-banner-img-btn');
 
 const daysOfWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -67,6 +78,37 @@ if (savedBgColor) {
   document.documentElement.style.setProperty('--bg-color', savedBgColor);
   bgColorPicker.value = savedBgColor;
 }
+
+const savedFont = localStorage.getItem('scheduler_font');
+if (savedFont) {
+  document.documentElement.style.setProperty('--schedule-font', savedFont);
+  fontSelect.value = savedFont;
+}
+
+function renderBanner() {
+  const title = localStorage.getItem('scheduler_banner_title') || '';
+  const url = localStorage.getItem('scheduler_banner_url') || '';
+  
+  if (title || url) {
+    bannerArea.classList.remove('hidden');
+    if (title) {
+      // 제목이 있으면 제목만 출력
+      bannerTitle.textContent = title;
+      bannerTitle.classList.remove('hidden');
+      bannerImg.classList.add('hidden');
+      bannerTitleInput.value = title;
+    } else {
+      // 제목이 없고 배너 이미지만 있으면 배너 이미지만 출력
+      bannerTitle.classList.add('hidden');
+      bannerImg.src = url;
+      bannerImg.classList.remove('hidden');
+      bannerUrlInput.value = url.startsWith('data:') ? '' : url;
+    }
+  } else {
+    bannerArea.classList.add('hidden');
+  }
+}
+renderBanner();
 
 // 이벤트 리스너 등록
 prevBtn.addEventListener('click', () => navigate(-1));
@@ -97,14 +139,77 @@ bgColorPicker.addEventListener('input', (e) => {
   localStorage.setItem('scheduler_bg_color', color);
 });
 
+fontSelect.addEventListener('change', (e) => {
+  const font = e.target.value;
+  document.documentElement.style.setProperty('--schedule-font', font);
+  localStorage.setItem('scheduler_font', font);
+});
+
+resetSettingsBtn.addEventListener('click', () => {
+  if(confirm('모든 옵션을 초기화하시겠습니까?')) {
+    startDayOfWeek = 0;
+    startDaySelect.value = 0;
+    localStorage.removeItem('scheduler_start_day');
+    
+    const defaultBg = '#f5f5f0';
+    document.documentElement.style.setProperty('--bg-color', defaultBg);
+    bgColorPicker.value = defaultBg;
+    localStorage.removeItem('scheduler_bg_color');
+    
+    const defaultFont = "'Nanum Pen Script', cursive";
+    document.documentElement.style.setProperty('--schedule-font', defaultFont);
+    fontSelect.value = defaultFont;
+    localStorage.removeItem('scheduler_font');
+    
+    if (currentView === 'weekly') render();
+    alert('옵션값이 모두 초기화되었습니다.');
+  }
+});
+
+bannerTitleInput.addEventListener('input', (e) => {
+  localStorage.setItem('scheduler_banner_title', e.target.value);
+  renderBanner();
+});
+
+bannerUrlInput.addEventListener('input', (e) => {
+  localStorage.setItem('scheduler_banner_url', e.target.value);
+  renderBanner();
+});
+
+bannerFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      localStorage.setItem('scheduler_banner_url', base64);
+      renderBanner();
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+deleteBannerImgBtn.addEventListener('click', () => {
+  if (confirm('설정된 배너 이미지를 삭제하시겠습니까?')) {
+    localStorage.removeItem('scheduler_banner_url');
+    bannerUrlInput.value = '';
+    bannerFileInput.value = '';
+    renderBanner();
+  }
+});
+
 // 백업 기능
 backupBtn.addEventListener('click', () => {
   const data = {
     scheduleData,
     memoData,
+    holidayData,
     settings: {
       startDayOfWeek,
-      bgColor: document.documentElement.style.getPropertyValue('--bg-color') || '#f5f5f0'
+      bgColor: document.documentElement.style.getPropertyValue('--bg-color') || '#f5f5f0',
+      font: document.documentElement.style.getPropertyValue('--schedule-font') || "'Nanum Pen Script', cursive",
+      bannerTitle: localStorage.getItem('scheduler_banner_title') || '',
+      bannerUrl: localStorage.getItem('scheduler_banner_url') || ''
     }
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -143,6 +248,21 @@ restoreFileInput.addEventListener('change', (e) => {
           localStorage.setItem('scheduler_bg_color', data.settings.bgColor);
           bgColorPicker.value = data.settings.bgColor;
         }
+        if (data.settings.font) {
+          document.documentElement.style.setProperty('--schedule-font', data.settings.font);
+          localStorage.setItem('scheduler_font', data.settings.font);
+          fontSelect.value = data.settings.font;
+        }
+        if (data.settings.bannerTitle !== undefined) {
+          localStorage.setItem('scheduler_banner_title', data.settings.bannerTitle);
+        }
+        if (data.settings.bannerUrl !== undefined) {
+          localStorage.setItem('scheduler_banner_url', data.settings.bannerUrl);
+        }
+      }
+      if (data.holidayData) {
+        holidayData = data.holidayData;
+        localStorage.setItem('scheduler_holiday_data', JSON.stringify(holidayData));
       }
       alert('데이터 복구가 완료되었습니다.');
       render();
@@ -423,12 +543,19 @@ function renderMonthlyView() {
     dayDiv.className = 'calendar-day';
     
     const currDayOfWeek = new Date(year, month, i).getDay();
+    const dateKey = formatDateKey(year, month, i);
+    const isHoliday = holidayData[dateKey];
+    
     let numClass = 'date-num';
-    if (currDayOfWeek === 0) numClass += ' sunday';
-    else if (currDayOfWeek === 6) numClass += ' saturday';
+    if (currDayOfWeek === 0 || isHoliday) {
+      numClass += ' sunday';
+      dayDiv.classList.add('is-sunday');
+    } else if (currDayOfWeek === 6) {
+      numClass += ' saturday';
+      dayDiv.classList.add('is-saturday');
+    }
     
     dayDiv.innerHTML = `<div class="${numClass}">${i}</div>`;
-    const dateKey = formatDateKey(year, month, i);
     const items = scheduleData[dateKey] || [];
     
     if (items.length > 0) {
@@ -471,9 +598,17 @@ function renderWeeklyView(weekStart) {
     const headerDiv = document.createElement('div');
     headerDiv.className = 'weekly-day-header';
     let dayClass = '';
-    if (currDay.getDay() === 0) dayClass = 'sunday';
+    const isHoliday = holidayData[dateKey];
+    if (currDay.getDay() === 0 || isHoliday) dayClass = 'sunday';
     else if (currDay.getDay() === 6) dayClass = 'saturday';
-    headerDiv.innerHTML = `<span class="${dayClass}">${currDay.getMonth() + 1}/${currDay.getDate()} (${dayName})</span><button class="add-btn" title="일정 추가">+</button>`;
+    
+    headerDiv.innerHTML = `
+      <span class="${dayClass}">${currDay.getMonth() + 1}/${currDay.getDate()} (${dayName})</span>
+      <div class="header-btns">
+        <button class="holiday-btn ${isHoliday ? 'active' : ''}" title="공휴일 지정">🚩</button>
+        <button class="add-btn" title="일정 추가">+</button>
+      </div>
+    `;
     
     const itemsDiv = document.createElement('div');
     itemsDiv.className = 'schedule-items';
@@ -492,6 +627,16 @@ function renderWeeklyView(weekStart) {
       const newWrapper = createScheduleInput(dateKey, {text: '', completed: false, color: 'none'}, itemsDiv);
       itemsDiv.appendChild(newWrapper);
       newWrapper.querySelector('.schedule-input').focus();
+    });
+
+    headerDiv.querySelector('.holiday-btn').addEventListener('click', () => {
+      if (holidayData[dateKey]) {
+        delete holidayData[dateKey];
+      } else {
+        holidayData[dateKey] = true;
+      }
+      localStorage.setItem('scheduler_holiday_data', JSON.stringify(holidayData));
+      render();
     });
   }
 }

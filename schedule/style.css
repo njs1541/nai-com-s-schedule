@@ -1,8 +1,9 @@
 /* 메모장 느낌의 폰트 및 스타일 초기화 */
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dongle&family=Gowun+Dodum&family=Jua&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@300;400;500&display=swap');
 
 :root {
   --bg-color: #f5f5f0;
+  --schedule-font: 'Nanum Pen Script', cursive;
 }
 
 body {
@@ -22,13 +23,48 @@ body {
 
 #app {
   width: 100%;
-  max-width: 800px;
+  max-width: 880px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   position: relative;
   border: 1px solid #e0e0e0;
+}
+
+/* 상단 배너 영역 스타일 */
+#banner-area {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
+
+#banner-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+}
+
+#banner-title {
+  position: relative;
+  z-index: 1;
+  font-family: var(--schedule-font);
+  font-size: 3.5rem;
+  color: #333;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+  padding: 0 20px;
+  text-align: center;
 }
 
 /* 메모장 왼쪽 빨간선 효과 */
@@ -111,6 +147,28 @@ h1 {
   border-color: #999;
 }
 
+/* 푸터 영역 */
+footer {
+  padding: 1.5rem;
+  text-align: center;
+  border-top: 1px solid #eee;
+  color: #888;
+  font-size: 0.9rem;
+  background-color: #fafafa;
+}
+
+footer p {
+  margin: 0;
+}
+
+.signature {
+  font-family: var(--schedule-font);
+  font-weight: bold;
+  color: #555;
+  font-size: 1.1rem;
+  margin-left: 5px;
+}
+
 /* 메인 뷰 공통 스타일 */
 .view {
   position: relative;
@@ -130,6 +188,7 @@ h1 {
 .calendar-grid-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
   text-align: center;
   font-weight: 500;
   margin-top: 20px;
@@ -143,10 +202,12 @@ h1 {
   grid-template-columns: repeat(7, 1fr);
   gap: 8px;
   background-color: #fff;
+  justify-items: center;
 }
 
 .calendar-day {
   height: 90px;
+  width: 80px;
   border: 1px solid #eee;
   padding: 8px;
   cursor: pointer;
@@ -172,6 +233,14 @@ h1 {
   box-shadow: none;
 }
 
+.calendar-day.is-sunday {
+  background-color: rgba(255, 235, 238, 0.5); /* 아주 연한 빨강 */
+}
+
+.calendar-day.is-saturday {
+  background-color: rgba(232, 241, 253, 0.5); /* 아주 연한 파랑 */
+}
+
 .calendar-day .date-num {
   font-size: 1rem;
   font-weight: 500;
@@ -187,13 +256,14 @@ h1 {
 }
 
 .month-schedule-item {
-  font-family: 'Nanum Pen Script', cursive;
+  font-family: var(--schedule-font);
   font-size: 1.1rem;
   color: #444;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  max-width: 80px;
 }
 
 .month-schedule-more {
@@ -251,6 +321,26 @@ h1 {
 
 .close-btn:hover {
   color: #333;
+}
+
+.setting-item-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+  font-size: 1.05rem;
+}
+
+.setting-item-column input[type="text"] {
+  padding: 0.5rem;
+  font-family: inherit;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.setting-item-column input[type="file"] {
+  font-size: 0.9rem;
 }
 
 .setting-item {
@@ -317,14 +407,16 @@ h1 {
 .weekly-day-header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 8px;
   font-weight: 500;
   font-size: 1.15rem;
   color: #333;
   background-color: transparent;
-  width: 140px;
+  width: 170px;
   flex-shrink: 0;
   margin-top: 5px;
+  white-space: nowrap;
   /* 입력칸과 세로 위치를 살짝 맞춤 */
 }
 
@@ -336,7 +428,12 @@ h1 {
   color: #64b5f6; /* 약간 파란색 */
 }
 
-.add-btn {
+.header-btns {
+  display: flex;
+  gap: 5px;
+}
+
+.add-btn, .holiday-btn {
   background: #fdfdfd;
   border: 1px solid #ccc;
   border-radius: 50%;
@@ -351,7 +448,20 @@ h1 {
   transition: all 0.2s;
 }
 
-.add-btn:hover {
+.holiday-btn {
+  font-size: 0.9rem;
+  filter: grayscale(1);
+  opacity: 0.5;
+}
+
+.holiday-btn.active {
+  filter: grayscale(0);
+  opacity: 1;
+  background-color: #ffebee;
+  border-color: #ffcdd2;
+}
+
+.add-btn:hover, .holiday-btn:hover {
   background: #eee;
   color: #000;
 }
@@ -371,7 +481,7 @@ h1 {
   border: none;
   border-bottom: 1px solid #e0e0e0; /* 배경 줄무늬 대신 개별 밑줄 적용 */
   background: transparent;
-  font-family: 'Nanum Pen Script', cursive;
+  font-family: var(--schedule-font);
   font-size: 1.5rem;
   color: #222;
   outline: none;
@@ -579,7 +689,7 @@ h1 {
 .memo-content-textarea {
   border: none;
   background: transparent;
-  font-family: 'Nanum Pen Script', cursive;
+  font-family: var(--schedule-font);
   font-size: 1.3rem;
   color: #444;
   outline: none;
@@ -589,7 +699,7 @@ h1 {
 }
 
 /* 모바일 반응형 디자인 */
-@media (max-width: 850px) {
+@media (max-width: 900px) {
   body {
     flex-direction: column;
     align-items: center;
@@ -618,7 +728,7 @@ h1 {
 
   #memo-panel {
     width: 100%;
-    max-width: 800px;
+    max-width: 880px;
   }
 
   .weekly-day {
