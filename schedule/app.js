@@ -133,6 +133,13 @@ const bannerFileInput = document.getElementById('banner-file-input');
 const deleteBannerImgBtn = document.getElementById('delete-banner-img-btn');
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 
+const searchBtn = document.getElementById('search-btn');
+const searchPanel = document.getElementById('search-panel');
+const closeSearchBtn = document.getElementById('close-search-btn');
+const searchInput = document.getElementById('search-input');
+const filterCompleted = document.getElementById('filter-completed');
+const searchResults = document.getElementById('search-results');
+
 const daysOfWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
 
 // 초기 설정 로드
@@ -166,6 +173,7 @@ function renderBanner() {
   
   if (title || url) {
     bannerArea.classList.remove('hidden');
+    document.body.classList.add('has-banner'); // 배너 있음 클래스 추가
     if (title) {
       // 제목이 있으면 제목만 출력
       bannerTitle.textContent = title;
@@ -181,6 +189,7 @@ function renderBanner() {
     }
   } else {
     bannerArea.classList.add('hidden');
+    document.body.classList.remove('has-banner'); // 배너 없음 클래스 제거
   }
 }
 renderBanner();
@@ -402,6 +411,75 @@ memoBtn.addEventListener('click', () => {
     memoBtn.classList.add('active');
   }
 });
+
+// 검색 패널 토글
+searchBtn.addEventListener('click', () => {
+  const isHidden = searchPanel.classList.toggle('hidden');
+  if (isHidden) {
+    searchBtn.classList.remove('active');
+  } else {
+    searchBtn.classList.add('active');
+    searchInput.focus();
+    performSearch(); // 열릴 때 검색 수행
+  }
+});
+
+closeSearchBtn.addEventListener('click', () => {
+  searchPanel.classList.add('hidden');
+  searchBtn.classList.remove('active');
+});
+
+// 검색 입력 및 필터 이벤트
+searchInput.addEventListener('input', performSearch);
+filterCompleted.addEventListener('change', performSearch);
+
+function performSearch() {
+  const query = searchInput.value.trim().toLowerCase();
+  const hideCompleted = filterCompleted.checked;
+  searchResults.innerHTML = '';
+  
+  if (query === '') {
+    searchResults.innerHTML = '<p style="text-align:center; opacity:0.5;">검색어를 입력하세요.</p>';
+    return;
+  }
+  
+  let foundCount = 0;
+  // 전체 날짜 순회
+  const sortedDates = Object.keys(scheduleData).sort();
+  
+  sortedDates.forEach(dateKey => {
+    const items = scheduleData[dateKey];
+    items.forEach(item => {
+      const matchText = item.text.toLowerCase().includes(query);
+      const isCompleted = item.completed;
+      
+      if (matchText && (!hideCompleted || !isCompleted)) {
+        foundCount++;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'search-result-item';
+        
+        const dateObj = new Date(dateKey);
+        const dateStr = `${dateObj.getFullYear()}년 ${dateObj.getMonth() + 1}월 ${dateObj.getDate()}일`;
+        
+        itemDiv.innerHTML = `
+          <div class="search-result-date">${dateStr}</div>
+          <div class="search-result-text ${isCompleted ? 'completed' : ''}">${item.text}</div>
+        `;
+        
+        itemDiv.addEventListener('click', () => {
+          setView('weekly', dateKey);
+          if (window.innerWidth < 900) searchPanel.classList.add('hidden'); // 모바일 배려
+        });
+        
+        searchResults.appendChild(itemDiv);
+      }
+    });
+  });
+  
+  if (foundCount === 0) {
+    searchResults.innerHTML = '<p style="text-align:center; opacity:0.5;">검색 결과가 없습니다.</p>';
+  }
+}
 
 // 드래그 앤 드롭 공통 로직
 let draggedItem = null;
@@ -642,6 +720,7 @@ function updateDataFromDOM(dateKey, itemsDiv) {
     delete scheduleData[dateKey];
   }
   localStorage.setItem('scheduler_data', JSON.stringify(scheduleData));
+  if (!searchPanel.classList.contains('hidden')) performSearch();
 }
 
 // 월간 뷰

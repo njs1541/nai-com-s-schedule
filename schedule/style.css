@@ -676,6 +676,119 @@ footer p {
 .hl-pink { background: linear-gradient(transparent 50%, rgba(244, 143, 177, 0.6) 50%); }
 .hl-green { background: linear-gradient(transparent 50%, rgba(165, 214, 167, 0.6) 50%); }
 
+/* 일정 검색 패널 */
+#search-panel {
+  width: 320px;
+  background-color: var(--surface-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: margin-top 0.3s; /* 부드러운 전환 */
+}
+
+/* 배너가 있을 때 패널 위치 조정 */
+body.has-banner #search-panel,
+body.has-banner #memo-panel {
+  margin-top: 200px;
+}
+
+#search-panel.hidden {
+  display: none !important;
+}
+
+.search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.search-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+#close-search-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.6;
+}
+
+.search-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+#search-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--header-bg);
+  color: var(--text-color);
+  font-family: inherit;
+  outline: none;
+}
+
+.filter-options {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+#search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
+  max-height: 500px;
+}
+
+.search-result-item {
+  padding: 10px;
+  background: var(--item-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.search-result-item:hover {
+  background: var(--header-bg);
+  transform: translateX(5px);
+}
+
+.search-result-date {
+  font-size: 0.8rem;
+  opacity: 0.6;
+  margin-bottom: 4px;
+}
+
+.search-result-text {
+  font-family: var(--schedule-font);
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+.search-result-text.completed {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
 /* 사이드 메모 패널 */
 #memo-panel {
   width: 320px;

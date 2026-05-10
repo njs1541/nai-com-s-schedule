@@ -9,6 +9,23 @@
 </head>
 
 <body>
+  <!-- 일정 검색 패널 -->
+  <aside id="search-panel" class="hidden">
+    <div class="search-header">
+      <h2>일정 검색</h2>
+      <button id="close-search-btn" title="닫기">&times;</button>
+    </div>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="검색어 입력...">
+      <div class="filter-options">
+        <label><input type="checkbox" id="filter-completed"> 완료 제외</label>
+      </div>
+    </div>
+    <div id="search-results">
+      <!-- 검색 결과가 여기에 표시됨 -->
+    </div>
+  </aside>
+
   <div id="app">
     <!-- 상단 배너 영역 -->
     <div id="banner-area" class="hidden">
@@ -27,6 +44,7 @@
       <div class="view-controls">
         <button id="monthly-view-btn" class="active">월간</button>
         <button id="weekly-view-btn">주간</button>
+        <button id="search-btn" title="검색">🔍</button>
         <button id="settings-btn" title="설정">⚙️</button>
         <button id="memo-btn" title="메모">📝</button>
       </div>
