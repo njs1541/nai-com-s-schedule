@@ -77,6 +77,10 @@
           </select>
         </div>
         <div class="setting-item">
+          <label for="dark-mode-toggle">다크 모드:</label>
+          <input type="checkbox" id="dark-mode-toggle">
+        </div>
+        <div class="setting-item">
           <label for="bg-color-picker">배경 색상:</label>
           <input type="color" id="bg-color-picker" value="#f5f5f0">
         </div>
@@ -101,7 +105,7 @@
         </div>
         <div class="setting-item-column">
           <label for="banner-file-input">배너 이미지 업로드:</label>
-          <input type="file" id="banner-file-input" accept="image/*">
+          <input type="file" id="banner-file-input" accept=".jpg, .jpeg, .png, .gif">
           <button id="delete-banner-img-btn" class="action-btn" style="margin-top: 5px; font-size: 0.85rem; padding: 4px;">배너 이미지 삭제</button>
         </div>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">

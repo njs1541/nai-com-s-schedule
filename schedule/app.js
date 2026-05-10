@@ -63,6 +63,7 @@ const bannerTitleInput = document.getElementById('banner-title-input');
 const bannerUrlInput = document.getElementById('banner-url-input');
 const bannerFileInput = document.getElementById('banner-file-input');
 const deleteBannerImgBtn = document.getElementById('delete-banner-img-btn');
+const darkModeToggle = document.getElementById('dark-mode-toggle');
 
 const daysOfWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -83,6 +84,12 @@ const savedFont = localStorage.getItem('scheduler_font');
 if (savedFont) {
   document.documentElement.style.setProperty('--schedule-font', savedFont);
   fontSelect.value = savedFont;
+}
+
+const savedDarkMode = localStorage.getItem('scheduler_dark_mode') === 'true';
+if (savedDarkMode) {
+  document.body.classList.add('dark-mode');
+  darkModeToggle.checked = true;
 }
 
 function renderBanner() {
@@ -129,8 +136,18 @@ startDaySelect.addEventListener('change', (e) => {
 // 설정 모달 및 배경/백업 로직
 settingsBtn.addEventListener('click', () => settingsModal.classList.remove('hidden'));
 closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
-settingsModal.addEventListener('click', (e) => {
-  if (e.target === settingsModal) settingsModal.classList.add('hidden');
+
+// 드래그 시 의도치 않게 닫히는 현상 방지
+settingsModal.addEventListener('mousedown', (e) => {
+  if (e.target === settingsModal) {
+    const handleMouseUp = (upEvent) => {
+      if (upEvent.target === settingsModal) {
+        settingsModal.classList.add('hidden');
+      }
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    document.addEventListener('mouseup', handleMouseUp);
+  }
 });
 
 bgColorPicker.addEventListener('input', (e) => {
@@ -143,6 +160,16 @@ fontSelect.addEventListener('change', (e) => {
   const font = e.target.value;
   document.documentElement.style.setProperty('--schedule-font', font);
   localStorage.setItem('scheduler_font', font);
+});
+
+darkModeToggle.addEventListener('change', (e) => {
+  const isDark = e.target.checked;
+  if (isDark) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+  localStorage.setItem('scheduler_dark_mode', isDark);
 });
 
 resetSettingsBtn.addEventListener('click', () => {
@@ -160,6 +187,18 @@ resetSettingsBtn.addEventListener('click', () => {
     document.documentElement.style.setProperty('--schedule-font', defaultFont);
     fontSelect.value = defaultFont;
     localStorage.removeItem('scheduler_font');
+    
+    // 배너 정보 초기화 추가
+    localStorage.removeItem('scheduler_banner_title');
+    localStorage.removeItem('scheduler_banner_url');
+    bannerTitleInput.value = '';
+    bannerUrlInput.value = '';
+    bannerFileInput.value = '';
+    renderBanner();
+
+    document.body.classList.remove('dark-mode');
+    darkModeToggle.checked = false;
+    localStorage.removeItem('scheduler_dark_mode');
     
     if (currentView === 'weekly') render();
     alert('옵션값이 모두 초기화되었습니다.');
@@ -209,7 +248,8 @@ backupBtn.addEventListener('click', () => {
       bgColor: document.documentElement.style.getPropertyValue('--bg-color') || '#f5f5f0',
       font: document.documentElement.style.getPropertyValue('--schedule-font') || "'Nanum Pen Script', cursive",
       bannerTitle: localStorage.getItem('scheduler_banner_title') || '',
-      bannerUrl: localStorage.getItem('scheduler_banner_url') || ''
+      bannerUrl: localStorage.getItem('scheduler_banner_url') || '',
+      darkMode: localStorage.getItem('scheduler_dark_mode') === 'true'
     }
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -258,6 +298,16 @@ restoreFileInput.addEventListener('change', (e) => {
         }
         if (data.settings.bannerUrl !== undefined) {
           localStorage.setItem('scheduler_banner_url', data.settings.bannerUrl);
+        }
+        if (data.settings.darkMode !== undefined) {
+          localStorage.setItem('scheduler_dark_mode', data.settings.darkMode);
+          if (data.settings.darkMode) {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.checked = true;
+          } else {
+            document.body.classList.remove('dark-mode');
+            darkModeToggle.checked = false;
+          }
         }
       }
       if (data.holidayData) {
@@ -541,6 +591,11 @@ function renderMonthlyView() {
   for (let i = 1; i <= daysInMonth; i++) {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'calendar-day';
+    
+    const today = new Date();
+    if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
+      dayDiv.classList.add('today');
+    }
     
     const currDayOfWeek = new Date(year, month, i).getDay();
     const dateKey = formatDateKey(year, month, i);
