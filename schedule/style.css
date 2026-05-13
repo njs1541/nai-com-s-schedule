@@ -676,6 +676,30 @@ footer p {
 .hl-pink { background: linear-gradient(transparent 50%, rgba(244, 143, 177, 0.6) 50%); }
 .hl-green { background: linear-gradient(transparent 50%, rgba(165, 214, 167, 0.6) 50%); }
 
+/* 주간 일정 접기 관련 스타일 */
+.collapsed-item {
+  display: none !important;
+}
+.collapsed-item.show {
+  display: flex !important;
+}
+.weekly-more-btn {
+  font-family: var(--schedule-font);
+  font-size: 1.2rem;
+  color: var(--text-color);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 5px 10px;
+  margin-top: -5px;
+  align-self: flex-start;
+  transition: opacity 0.2s;
+  user-select: none;
+}
+.weekly-more-btn:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
 /* 일정 검색 패널 */
 #search-panel {
   width: 320px;

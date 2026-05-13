@@ -843,6 +843,35 @@ function renderMonthlyView() {
   }
 }
 
+function setupWeeklyMoreBtn(dateKey, itemsDiv) {
+  // 기존 버튼 제거
+  const existingBtn = itemsDiv.querySelector('.weekly-more-btn');
+  if (existingBtn) existingBtn.remove();
+
+  const wrappers = itemsDiv.querySelectorAll('.item-wrapper');
+  if (wrappers.length <= 1) return;
+
+  const moreBtn = document.createElement('div');
+  moreBtn.className = 'weekly-more-btn';
+  // 현재 상태가 펼쳐져 있는지 확인 (새로 추가할 때는 보통 펼침 상태를 원함)
+  const isCurrentlyExpanded = wrappers[1].classList.contains('show');
+  
+  if (isCurrentlyExpanded) {
+    moreBtn.classList.add('expanded');
+    moreBtn.textContent = '접기';
+  } else {
+    moreBtn.textContent = `...외 ${wrappers.length - 1}개`;
+  }
+
+  moreBtn.addEventListener('click', () => {
+    const isExpanded = moreBtn.classList.toggle('expanded');
+    const hiddenItems = itemsDiv.querySelectorAll('.collapsed-item');
+    hiddenItems.forEach(el => el.classList.toggle('show', isExpanded));
+    moreBtn.textContent = isExpanded ? '접기' : `...외 ${wrappers.length - 1}개`;
+  });
+  itemsDiv.appendChild(moreBtn);
+}
+
 // 주간 뷰
 function renderWeeklyView(weekStart) {
   weeklyList.innerHTML = '';
@@ -874,18 +903,40 @@ function renderWeeklyView(weekStart) {
     itemsDiv.className = 'schedule-items';
     
     const items = scheduleData[dateKey] || [];
-    items.forEach((itemObj) => {
+    items.forEach((itemObj, idx) => {
       const inputWrapper = createScheduleInput(dateKey, itemObj, itemsDiv);
+      if (idx > 0) inputWrapper.classList.add('collapsed-item');
       itemsDiv.appendChild(inputWrapper);
     });
+
+    setupWeeklyMoreBtn(dateKey, itemsDiv);
     
     dayDiv.appendChild(headerDiv);
     dayDiv.appendChild(itemsDiv);
     weeklyList.appendChild(dayDiv);
     
     headerDiv.querySelector('.add-btn').addEventListener('click', () => {
+      // 새로운 항목 추가 시 기존의 접힌 항목들도 모두 펼치기
+      const hiddenItems = itemsDiv.querySelectorAll('.collapsed-item');
+      hiddenItems.forEach(el => el.classList.add('show'));
+
+      const allWrappers = itemsDiv.querySelectorAll('.item-wrapper');
       const newWrapper = createScheduleInput(dateKey, {text: '', completed: false, color: 'none'}, itemsDiv);
-      itemsDiv.appendChild(newWrapper);
+      
+      if (allWrappers.length > 0) {
+        newWrapper.classList.add('collapsed-item');
+        newWrapper.classList.add('show'); // 추가된 본인도 표시
+      }
+      
+      // 버튼보다 앞에 삽입
+      const moreBtn = itemsDiv.querySelector('.weekly-more-btn');
+      if (moreBtn) {
+        itemsDiv.insertBefore(newWrapper, moreBtn);
+      } else {
+        itemsDiv.appendChild(newWrapper);
+      }
+
+      setupWeeklyMoreBtn(dateKey, itemsDiv);
       newWrapper.querySelector('.schedule-input').focus();
     });
 
@@ -936,6 +987,7 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
         if (input.value.trim() === '') {
           wrapper.remove();
           updateDataFromDOM(dateKey, itemsDiv);
+          setupWeeklyMoreBtn(dateKey, itemsDiv);
         }
       }
     }, 0);
