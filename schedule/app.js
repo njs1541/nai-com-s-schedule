@@ -727,7 +727,8 @@ function navigate(direction) {
   render();
 }
 
-function setView(view, targetDate = null) {
+function setView(view, targetDate = null, isBack = false) {
+  const previousView = currentView;
   currentView = view;
   if (targetDate) currentDate = new Date(targetDate);
   
@@ -741,9 +742,23 @@ function setView(view, targetDate = null) {
     weeklyViewBtn.classList.add('active');
     monthlyView.classList.add('hidden');
     weeklyView.classList.remove('hidden');
+    
+    // 주간 뷰 진입 시 히스토리 추가 (뒤로가기 대응)
+    if (!isBack && previousView === 'monthly') {
+      history.pushState({ view: 'weekly', date: currentDate.getTime() }, '');
+    }
   }
   render();
 }
+
+// 브라우저 뒤로가기(마우스 뒤로가기 버튼 포함) 이벤트 처리
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.view === 'weekly') {
+    setView('weekly', new Date(e.state.date), true);
+  } else {
+    setView('monthly', null, true);
+  }
+});
 
 function render() {
   if (currentView === 'monthly') {
