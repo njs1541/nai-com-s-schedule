@@ -171,25 +171,33 @@ function renderBanner() {
   const title = localStorage.getItem('scheduler_banner_title') || '';
   const url = localStorage.getItem('scheduler_banner_url') || '';
   
+  // 입력 필드 값 동기화 (항상 최신 상태 반영)
+  bannerTitleInput.value = title;
+  bannerUrlInput.value = url.startsWith('data:') ? '' : url;
+
   if (title || url) {
     bannerArea.classList.remove('hidden');
-    document.body.classList.add('has-banner'); // 배너 있음 클래스 추가
+    document.body.classList.add('has-banner');
+
     if (title) {
-      // 제목이 있으면 제목만 출력
       bannerTitle.textContent = title;
       bannerTitle.classList.remove('hidden');
-      bannerImg.classList.add('hidden');
       bannerTitleInput.value = title;
     } else {
-      // 제목이 없고 배너 이미지만 있으면 배너 이미지만 출력
       bannerTitle.classList.add('hidden');
+    }
+
+    if (url) {
       bannerImg.src = url;
       bannerImg.classList.remove('hidden');
-      bannerUrlInput.value = url.startsWith('data:') ? '' : url;
+    } else {
+      bannerImg.classList.add('hidden');
     }
   } else {
     bannerArea.classList.add('hidden');
-    document.body.classList.remove('has-banner'); // 배너 없음 클래스 제거
+    document.body.classList.remove('has-banner');
+    bannerTitle.classList.add('hidden');
+    bannerImg.classList.add('hidden');
   }
 }
 renderBanner();
@@ -283,16 +291,34 @@ resetSettingsBtn.addEventListener('click', () => {
 });
 
 bannerTitleInput.addEventListener('input', (e) => {
+  const url = localStorage.getItem('scheduler_banner_url');
+  if (url && e.target.value !== '') {
+    alert('이미 설정된 배너 이미지가 있습니다. 이미지 URL을 지우거나 배너 이미지를 삭제한 후 제목을 입력해 주세요.');
+    e.target.value = '';
+    return;
+  }
   localStorage.setItem('scheduler_banner_title', e.target.value);
   renderBanner();
 });
 
 bannerUrlInput.addEventListener('input', (e) => {
+  const title = localStorage.getItem('scheduler_banner_title');
+  if (title && e.target.value !== '') {
+    alert('이미 설정된 배너 제목이 있습니다. 배너 제목을 지운 후 이미지를 설정해 주세요.');
+    e.target.value = '';
+    return;
+  }
   localStorage.setItem('scheduler_banner_url', e.target.value);
   renderBanner();
 });
 
 bannerFileInput.addEventListener('change', (e) => {
+  const title = localStorage.getItem('scheduler_banner_title');
+  if (title) {
+    alert('이미 설정된 배너 제목이 있습니다. 배너 제목을 지운 후 이미지를 업로드해 주세요.');
+    e.target.value = '';
+    return;
+  }
   const file = e.target.files[0];
   if (file) {
     const reader = new FileReader();
