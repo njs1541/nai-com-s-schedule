@@ -170,28 +170,35 @@ if (savedDarkMode) {
 function renderBanner() {
   const title = localStorage.getItem('scheduler_banner_title') || '';
   const url = localStorage.getItem('scheduler_banner_url') || '';
+  const upload = localStorage.getItem('scheduler_banner_upload') || '';
   
-  // 입력 필드 값 동기화 (항상 최신 상태 반영)
+  // 입력 필드 값 동기화
   bannerTitleInput.value = title;
-  bannerUrlInput.value = url.startsWith('data:') ? '' : url;
+  bannerUrlInput.value = url;
 
-  if (title || url) {
+  if (title || url || upload) {
     bannerArea.classList.remove('hidden');
     document.body.classList.add('has-banner');
 
+    // 제목 표시 여부
     if (title) {
       bannerTitle.textContent = title;
       bannerTitle.classList.remove('hidden');
-      bannerTitleInput.value = title;
     } else {
       bannerTitle.classList.add('hidden');
     }
 
-    if (url) {
-      bannerImg.src = url;
+    // 이미지 표시 여부 (URL 또는 업로드 파일)
+    if (url || upload) {
+      const newSrc = url || upload;
+      if (bannerImg.src !== newSrc) {
+        bannerImg.src = newSrc;
+      }
       bannerImg.classList.remove('hidden');
     } else {
+      bannerImg.src = '';
       bannerImg.classList.add('hidden');
+      bannerFileInput.value = ''; // 파일 필드도 함께 초기화
     }
   } else {
     bannerArea.classList.add('hidden');
@@ -276,6 +283,7 @@ resetSettingsBtn.addEventListener('click', () => {
     // 배너 정보 초기화 추가
     localStorage.removeItem('scheduler_banner_title');
     localStorage.removeItem('scheduler_banner_url');
+    localStorage.removeItem('scheduler_banner_upload');
     bannerTitleInput.value = '';
     bannerUrlInput.value = '';
     bannerFileInput.value = '';
@@ -292,7 +300,8 @@ resetSettingsBtn.addEventListener('click', () => {
 
 bannerTitleInput.addEventListener('input', (e) => {
   const url = localStorage.getItem('scheduler_banner_url');
-  if (url && e.target.value !== '') {
+  const upload = localStorage.getItem('scheduler_banner_upload');
+  if ((url || upload) && e.target.value !== '') {
     alert('이미 설정된 배너 이미지가 있습니다. 이미지 URL을 지우거나 배너 이미지를 삭제한 후 제목을 입력해 주세요.');
     e.target.value = '';
     return;
@@ -303,8 +312,9 @@ bannerTitleInput.addEventListener('input', (e) => {
 
 bannerUrlInput.addEventListener('input', (e) => {
   const title = localStorage.getItem('scheduler_banner_title');
-  if (title && e.target.value !== '') {
-    alert('이미 설정된 배너 제목이 있습니다. 배너 제목을 지운 후 이미지를 설정해 주세요.');
+  const upload = localStorage.getItem('scheduler_banner_upload');
+  if ((title || upload) && e.target.value !== '') {
+    alert('이미 설정된 배너 제목이나 업로드된 이미지가 있습니다. 해당 항목을 삭제한 후 URL을 입력해 주세요.');
     e.target.value = '';
     return;
   }
@@ -314,30 +324,45 @@ bannerUrlInput.addEventListener('input', (e) => {
 
 bannerFileInput.addEventListener('change', (e) => {
   const title = localStorage.getItem('scheduler_banner_title');
-  if (title) {
-    alert('이미 설정된 배너 제목이 있습니다. 배너 제목을 지운 후 이미지를 업로드해 주세요.');
+  const url = localStorage.getItem('scheduler_banner_url');
+  if (title || url) {
+    alert('이미 설정된 배너 제목이나 URL이 있습니다. 해당 항목을 삭제한 후 이미지를 업로드해 주세요.');
     e.target.value = '';
     return;
   }
   const file = e.target.files[0];
   if (file) {
+    // 파일 크기 체크 (2MB 제한)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('이미지 파일이 너무 큽니다. 2MB 이하의 파일을 업로드하거나 이미지 URL 기능을 이용해 주세요.');
+      e.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
-      const base64 = event.target.result;
-      localStorage.setItem('scheduler_banner_url', base64);
-      renderBanner();
+      try {
+        const base64 = event.target.result;
+        localStorage.setItem('scheduler_banner_upload', base64);
+        renderBanner();
+      } catch (err) {
+        console.error('Storage error:', err);
+        alert('이미지를 저장하는 공간이 부족합니다. 다른 설정을 지우거나 더 작은 이미지를 사용해 주세요.');
+      }
+    };
+    reader.onerror = () => {
+      alert('파일을 읽는 도중 오류가 발생했습니다.');
     };
     reader.readAsDataURL(file);
   }
 });
 
 deleteBannerImgBtn.addEventListener('click', () => {
-  if (confirm('설정된 배너 이미지를 삭제하시겠습니까?')) {
-    localStorage.removeItem('scheduler_banner_url');
-    bannerUrlInput.value = '';
-    bannerFileInput.value = '';
-    renderBanner();
-  }
+  localStorage.removeItem('scheduler_banner_url');
+  localStorage.removeItem('scheduler_banner_upload');
+  bannerUrlInput.value = '';
+  bannerFileInput.value = '';
+  renderBanner();
 });
 
 // 백업 기능
@@ -352,6 +377,7 @@ backupBtn.addEventListener('click', () => {
       font: document.documentElement.style.getPropertyValue('--schedule-font') || "'Nanum Pen Script', cursive",
       bannerTitle: localStorage.getItem('scheduler_banner_title') || '',
       bannerUrl: localStorage.getItem('scheduler_banner_url') || '',
+      bannerUpload: localStorage.getItem('scheduler_banner_upload') || '',
       darkMode: localStorage.getItem('scheduler_dark_mode') === 'true'
     }
   };
@@ -401,6 +427,9 @@ restoreFileInput.addEventListener('change', (e) => {
         }
         if (data.settings.bannerUrl !== undefined) {
           localStorage.setItem('scheduler_banner_url', data.settings.bannerUrl);
+        }
+        if (data.settings.bannerUpload !== undefined) {
+          localStorage.setItem('scheduler_banner_upload', data.settings.bannerUpload);
         }
         if (data.settings.darkMode !== undefined) {
           localStorage.setItem('scheduler_dark_mode', data.settings.darkMode);
