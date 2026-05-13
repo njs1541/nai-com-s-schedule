@@ -655,6 +655,17 @@ footer p {
   font-weight: bold;
 }
 
+.toolbar-btn.delete-btn {
+  color: #f44336;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.toolbar-btn.delete-btn:hover {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
 .memo-item .item-toolbar {
   display: none !important;
 }

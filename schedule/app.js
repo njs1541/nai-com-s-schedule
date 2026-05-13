@@ -656,7 +656,20 @@ function createToolbar(container, updateCallback) {
     });
     toolbar.appendChild(cBtn);
   });
+
+  const deleteBtn = document.createElement('div');
+  deleteBtn.className = 'toolbar-btn delete-btn';
+  deleteBtn.innerHTML = '×';
+  deleteBtn.title = '삭제';
+  deleteBtn.addEventListener('click', () => {
+    if (confirm('이 항목을 삭제하시겠습니까?')) {
+      container.remove();
+      updateCallback();
+    }
+  });
+
   toolbar.appendChild(checkBtn);
+  toolbar.appendChild(deleteBtn);
   return toolbar;
 }
 
@@ -974,7 +987,10 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
   input.value = itemObj.text || '';
   input.placeholder = '일정을 입력하세요...';
   
-  const toolbar = createToolbar(wrapper, () => updateDataFromDOM(dateKey, itemsDiv));
+  const toolbar = createToolbar(wrapper, () => {
+    updateDataFromDOM(dateKey, itemsDiv);
+    setupWeeklyMoreBtn(dateKey, itemsDiv);
+  });
   
   wrapper.appendChild(toolbar);
   wrapper.appendChild(input);
