@@ -143,7 +143,10 @@
   <aside id="memo-panel" class="hidden">
     <div class="memo-header">
       <h2>메모장</h2>
-      <button id="add-memo-btn" title="메모 추가">+</button>
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <button id="add-memo-btn" title="메모 추가">+</button>
+        <button id="close-memo-btn" style="background: transparent; border: none; font-size: 1.8rem; line-height: 1; cursor: pointer; color: var(--text-color); opacity: 0.6;" title="닫기">&times;</button>
+      </div>
     </div>
     <div id="memo-list">
       <!-- JS로 메모 항목이 추가됨 -->

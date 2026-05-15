@@ -244,8 +244,8 @@ footer p {
 .calendar-day {
   height: 90px;
   width: 100%; /* 너비를 100%로 변경하여 그리드 칸에 맞춤 */
-  max-width: 100px;
   min-width: 40px; /* 최소 너비 확보 */
+  box-sizing: border-box;
   border: 1px solid var(--border-color);
   padding: 8px;
   cursor: pointer;
@@ -255,6 +255,7 @@ footer p {
   border-radius: 6px;
   transition: all 0.2s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
 }
 
 .calendar-day:hover {
@@ -289,6 +290,9 @@ footer p {
   font-size: 1rem;
   font-weight: 500;
   margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sunday {
@@ -1025,8 +1029,8 @@ body.has-banner #memo-panel {
   body {
     flex-direction: column;
     align-items: center;
-    padding: 1rem;
-    gap: 20px;
+    padding: 0.5rem;
+    gap: 15px;
   }
   
   #app {
@@ -1068,27 +1072,50 @@ body.has-banner #memo-panel {
   }
 
   .view {
-    padding-left: 30px; /* 왼쪽 여백 축소 */
+    padding-left: 25px; /* 왼쪽 여백 더 축소 */
     padding-right: 10px;
     min-height: auto;
   }
 
+  .calendar-grid-header {
+    gap: 3px;
+    font-size: 0.9rem;
+  }
+
+  .calendar-grid {
+    gap: 3px;
+  }
+
   .calendar-day {
     height: 70px; /* 모바일에서 높이 축소 */
-    padding: 4px;
+    padding: 3px;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .calendar-day .date-num {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    margin-bottom: 2px;
   }
 
   .month-schedule-item {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    max-width: 100%;
   }
 
-  #memo-panel {
-    width: 100%;
-    max-width: 880px;
+  #search-panel, #memo-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 400px;
+    max-height: 80vh;
+    z-index: 9999;
+    margin: 0 !important;
+    overflow-y: auto;
+    box-sizing: border-box;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
   }
 
   .weekly-day {
@@ -1107,6 +1134,7 @@ body.has-banner #memo-panel {
     height: 36px;
     font-size: 1.4rem;
   }
+
 
   /* 모바일에서 기존 인라인 툴바 숨기기 */
   .item-toolbar {

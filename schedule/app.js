@@ -123,6 +123,7 @@ const restoreFileInput = document.getElementById('restore-file-input');
 const memoBtn = document.getElementById('memo-btn');
 const memoPanel = document.getElementById('memo-panel');
 const addMemoBtn = document.getElementById('add-memo-btn');
+const closeMemoBtn = document.getElementById('close-memo-btn');
 const memoList = document.getElementById('memo-list');
 
 const bannerArea = document.getElementById('banner-area');
@@ -484,6 +485,13 @@ memoBtn.addEventListener('click', () => {
   }
 });
 
+if (closeMemoBtn) {
+  closeMemoBtn.addEventListener('click', () => {
+    memoPanel.classList.add('hidden');
+    memoBtn.classList.remove('active');
+  });
+}
+
 // 검색 패널 토글
 searchBtn.addEventListener('click', () => {
   const isHidden = searchPanel.classList.toggle('hidden');
@@ -603,6 +611,91 @@ function handleDragEnd() {
   draggedItem = null;
 }
 
+// [모바일 터치 드래그 로직]
+let touchTimer = null;
+let touchClone = null;
+
+function handleTouchStart(e) {
+  if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
+  const touch = e.touches[0];
+  const targetItem = this;
+  
+  touchTimer = setTimeout(() => {
+    draggedItem = targetItem;
+    targetItem.classList.add('dragging');
+    
+    touchClone = targetItem.cloneNode(true);
+    touchClone.style.position = 'fixed';
+    touchClone.style.zIndex = '9999';
+    touchClone.style.opacity = '0.8';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.width = targetItem.offsetWidth + 'px';
+    document.body.appendChild(touchClone);
+    
+    moveClone(touch);
+    if (navigator.vibrate) navigator.vibrate(50);
+  }, 400); // 400ms 길게 누르기
+}
+
+function moveClone(touch) {
+  if (!touchClone) return;
+  touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+  touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+}
+
+function handleTouchMove(e) {
+  if (!draggedItem) {
+    clearTimeout(touchTimer);
+    return;
+  }
+  
+  e.preventDefault(); // 스크롤 방지
+  const touch = e.touches[0];
+  moveClone(touch);
+  
+  const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  if (!elemBelow) return;
+  
+  const targetItem = elemBelow.closest('.item-wrapper, .memo-item');
+  document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+  
+  if (targetItem && targetItem !== draggedItem && targetItem.parentNode === draggedItem.parentNode) {
+    targetItem.classList.add('drag-over');
+  }
+}
+
+function handleTouchEnd(e) {
+  clearTimeout(touchTimer);
+  if (!draggedItem) return;
+  
+  if (touchClone) {
+    touchClone.remove();
+    touchClone = null;
+  }
+  
+  draggedItem.classList.remove('dragging');
+  
+  const targetItem = document.querySelector('.drag-over');
+  if (targetItem) {
+    targetItem.classList.remove('drag-over');
+    
+    const container = draggedItem.parentNode;
+    const allItems = [...container.children];
+    const draggedIdx = allItems.indexOf(draggedItem);
+    const targetIdx = allItems.indexOf(targetItem);
+    
+    if (draggedIdx < targetIdx) {
+      container.insertBefore(draggedItem, targetItem.nextSibling);
+    } else {
+      container.insertBefore(draggedItem, targetItem);
+    }
+    
+    if (currentDragCallback) currentDragCallback();
+  }
+  
+  draggedItem = null;
+}
+
 function addDragEvents(elem, updateCallback) {
   elem.setAttribute('draggable', 'true');
   elem.addEventListener('dragstart', function(e) {
@@ -613,6 +706,15 @@ function addDragEvents(elem, updateCallback) {
   elem.addEventListener('dragleave', handleDragLeave);
   elem.addEventListener('drop', handleDrop);
   elem.addEventListener('dragend', handleDragEnd);
+
+  // 모바일 터치 이벤트
+  elem.addEventListener('touchstart', function(e) {
+    currentDragCallback = updateCallback;
+    handleTouchStart.call(this, e);
+  }, { passive: false });
+  elem.addEventListener('touchmove', handleTouchMove, { passive: false });
+  elem.addEventListener('touchend', handleTouchEnd);
+  elem.addEventListener('touchcancel', handleTouchEnd);
 }
 
 // 메모 관련 로직
@@ -766,6 +868,9 @@ function navigate(direction) {
   render();
 }
 
+// 초기 로딩 시 기본 상태를 history에 저장
+history.replaceState({ view: currentView, date: currentDate.getTime() }, '');
+
 function setView(view, targetDate = null, isBack = false) {
   const previousView = currentView;
   currentView = view;
@@ -781,19 +886,20 @@ function setView(view, targetDate = null, isBack = false) {
     weeklyViewBtn.classList.add('active');
     monthlyView.classList.add('hidden');
     weeklyView.classList.remove('hidden');
-    
-    // 주간 뷰 진입 시 히스토리 추가 (뒤로가기 대응)
-    if (!isBack && previousView === 'monthly') {
-      history.pushState({ view: 'weekly', date: currentDate.getTime() }, '');
-    }
   }
+  
+  // 뷰가 변경될 때마다 히스토리 추가 (뒤로가기 대응)
+  if (!isBack && previousView !== view) {
+    history.pushState({ view: view, date: currentDate.getTime() }, '');
+  }
+  
   render();
 }
 
 // 브라우저 뒤로가기(마우스 뒤로가기 버튼 포함) 이벤트 처리
 window.addEventListener('popstate', (e) => {
-  if (e.state && e.state.view === 'weekly') {
-    setView('weekly', new Date(e.state.date), true);
+  if (e.state && e.state.view) {
+    setView(e.state.view, new Date(e.state.date), true);
   } else {
     setView('monthly', null, true);
   }
@@ -1084,22 +1190,28 @@ function updateMobileActionBarState() {
   });
 }
 
-// 모바일 액션 바 버튼 이벤트
-mobileCheckBtn.addEventListener('click', (e) => {
+// 액션 바 클릭 시 블러 방지 (여백 클릭 포함)
+mobileActionBar.addEventListener('pointerdown', (e) => {
+  // 바 내부 어디를 누르더라도 입력창의 포커스를 유지함 (키보드 닫힘 방지)
   e.preventDefault();
+  clearTimeout(hideActionBarTimeout);
+});
+
+// 모바일 액션 바 버튼 이벤트 (pointerdown 사용으로 클릭 씹힘 및 화면 깜빡임 방지)
+mobileCheckBtn.addEventListener('pointerdown', (e) => {
+  e.preventDefault(); // 이벤트 전파 및 포커스 유실 방지
+  e.stopPropagation();
   if (!activeItemWrapper) return;
   
   activeItemWrapper.classList.toggle('completed');
   updateDataFromDOM(activeItemDateKey, activeItemItemsDiv);
   updateMobileActionBarState();
-  // 포커스 유지
-  activeItemWrapper.querySelector('.schedule-input').focus();
-  clearTimeout(hideActionBarTimeout);
 });
 
 mobileColorDots.forEach(dot => {
-  dot.addEventListener('click', (e) => {
+  dot.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    e.stopPropagation();
     if (!activeItemWrapper) return;
     
     const color = dot.dataset.color;
@@ -1109,13 +1221,12 @@ mobileColorDots.forEach(dot => {
     
     updateDataFromDOM(activeItemDateKey, activeItemItemsDiv);
     updateMobileActionBarState();
-    activeItemWrapper.querySelector('.schedule-input').focus();
-    clearTimeout(hideActionBarTimeout);
   });
 });
 
-mobileDeleteBtn.addEventListener('click', (e) => {
+mobileDeleteBtn.addEventListener('pointerdown', (e) => {
   e.preventDefault();
+  e.stopPropagation();
   if (!activeItemWrapper) return;
   
   if (confirm('이 항목을 삭제하시겠습니까?')) {
@@ -1125,19 +1236,6 @@ mobileDeleteBtn.addEventListener('click', (e) => {
     activeItemWrapper = null;
   }
 });
-
-// 액션 바 클릭 시 블러 방지 (여백 클릭 포함)
-mobileActionBar.addEventListener('mousedown', (e) => {
-  // 바 내부 어디를 클릭해도 입력창의 포커스를 유지함
-  e.preventDefault();
-  clearTimeout(hideActionBarTimeout);
-});
-
-mobileActionBar.addEventListener('touchstart', (e) => {
-  // 모바일에서는 preventDefault를 사용하면 클릭이 씹힐 수 있으므로 
-  // 타이머만 제거하여 바가 사라지는 것을 방지합니다.
-  clearTimeout(hideActionBarTimeout);
-}, { passive: true }); // passive를 통해 클릭 차단을 막음
 
 function createScheduleInput(dateKey, itemObj, itemsDiv) {
   const wrapper = document.createElement('div');
