@@ -236,14 +236,16 @@ footer p {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 5px; /* 간격을 약간 줄임 */
   background-color: transparent;
-  justify-items: center;
+  width: 100%;
 }
 
 .calendar-day {
   height: 90px;
-  width: 80px;
+  width: 100%; /* 너비를 100%로 변경하여 그리드 칸에 맞춤 */
+  max-width: 100px;
+  min-width: 40px; /* 최소 너비 확보 */
   border: 1px solid var(--border-color);
   padding: 8px;
   cursor: pointer;
@@ -600,7 +602,6 @@ footer p {
   line-height: 36px;
   height: 36px;
   padding: 0 5px;
-  padding-right: 70px; /* 툴바 공간 확보 */
 }
 
 /* 완료선 및 형광펜, 툴바, 드래그앤드롭 스타일 */
@@ -627,21 +628,7 @@ footer p {
 }
 
 .item-toolbar {
-  position: absolute;
-  right: 5px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  gap: 4px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s;
-  z-index: 10;
-}
-
-.item-wrapper:hover .item-toolbar {
-  opacity: 1;
-  pointer-events: auto;
+  display: none !important;
 }
 
 .toolbar-btn {
@@ -1034,7 +1021,7 @@ body.has-banner #memo-panel {
 }
 
 /* 모바일 반응형 디자인 */
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   body {
     flex-direction: column;
     align-items: center;
@@ -1049,7 +1036,31 @@ body.has-banner #memo-panel {
   header {
     padding: 1rem 1rem 1rem 40px;
     flex-direction: column;
-    gap: 15px;
+    gap: 10px;
+  }
+
+  .nav-controls {
+    justify-content: center;
+    width: 100%;
+  }
+
+  #current-date-display {
+    width: auto;
+    flex: 1;
+    font-size: 1.2rem;
+  }
+
+  .view-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    width: 100%;
+  }
+
+  .view-controls button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
   }
 
   #app::before {
@@ -1057,8 +1068,22 @@ body.has-banner #memo-panel {
   }
 
   .view {
-    padding-left: 40px;
-    padding-right: 15px;
+    padding-left: 30px; /* 왼쪽 여백 축소 */
+    padding-right: 10px;
+    min-height: auto;
+  }
+
+  .calendar-day {
+    height: 70px; /* 모바일에서 높이 축소 */
+    padding: 4px;
+  }
+
+  .calendar-day .date-num {
+    font-size: 0.9rem;
+  }
+
+  .month-schedule-item {
+    font-size: 0.9rem;
   }
 
   #memo-panel {
@@ -1073,6 +1098,112 @@ body.has-banner #memo-panel {
 
   .weekly-day-header {
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 10px;
+    font-size: 1.3rem;
   }
+
+  .add-btn, .holiday-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 1.4rem;
+  }
+
+  /* 모바일에서 기존 인라인 툴바 숨기기 */
+  .item-toolbar {
+    display: none !important;
+  }
+
+  .schedule-input {
+    height: 48px;
+    line-height: 48px;
+    font-size: 1.6rem;
+    padding-right: 10px; /* 툴바가 사라졌으므로 여백 축소 */
+  }
+
+  .color-group.expanded {
+    max-width: 0;
+  }
+}
+
+/* 모바일 액션 바 */
+#mobile-action-bar {
+  position: fixed;
+  bottom: 0; /* 하단 고정 */
+  left: 50%;
+  transform: translate(-50%, 100%);
+  width: 100%;
+  max-width: 800px;
+  background: var(--modal-bg);
+  box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
+  z-index: 999999; /* 최상위 레이어 확보 */
+  padding: 15px 0;
+  border-radius: 20px 20px 0 0;
+  border-top: 2px solid var(--line-color);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#mobile-action-bar.active {
+  transform: translate(-50%, 0) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* 데스크탑 숨김 쿼리 삭제됨 */
+
+.action-bar-content {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.bar-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-color);
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.bar-btn.active {
+  background: #eee;
+  border-color: #999;
+}
+
+.bar-divider {
+  width: 1px;
+  height: 30px;
+  background: var(--border-color);
+}
+
+.color-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.color-dot.c-none { background: #fff; border: 1px solid #ccc; }
+.color-dot.c-yellow { background: #fff59d; }
+.color-dot.c-pink { background: #f48fb1; }
+.color-dot.c-green { background: #a5d6a7; }
+
+.color-dot.selected {
+  border: 3px solid var(--line-color);
+  transform: scale(1.1);
+}
+
+#mobile-delete-btn {
+  color: #f44336;
+  font-size: 1.8rem;
 }

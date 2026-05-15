@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>가벼운 메모장 스케줄러</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=1.2">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffffff">
 </head>
 
 <body>
@@ -148,7 +150,21 @@
     </div>
   </aside>
 
-  <script src="app.js"></script>
+  <!-- 모바일 전용 하단 액션 바 -->
+  <div id="mobile-action-bar">
+    <div class="action-bar-content">
+      <button id="mobile-check-btn" class="bar-btn" title="완료">✔</button>
+      <div class="bar-divider"></div>
+      <button class="bar-btn color-dot c-none" data-color="none" title="기본"></button>
+      <button class="bar-btn color-dot c-yellow" data-color="yellow" title="노랑"></button>
+      <button class="bar-btn color-dot c-pink" data-color="pink" title="분홍"></button>
+      <button class="bar-btn color-dot c-green" data-color="green" title="초록"></button>
+      <div class="bar-divider"></div>
+      <button id="mobile-delete-btn" class="bar-btn" title="삭제">×</button>
+    </div>
+  </div>
+
+  <script src="app.js?v=1.2"></script>
 </body>
 
 </html>

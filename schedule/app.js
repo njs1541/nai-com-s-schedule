@@ -141,6 +141,17 @@ const searchInput = document.getElementById('search-input');
 const filterCompleted = document.getElementById('filter-completed');
 const searchResults = document.getElementById('search-results');
 
+// 모바일 액션 바 관련
+const mobileActionBar = document.getElementById('mobile-action-bar');
+const mobileCheckBtn = document.getElementById('mobile-check-btn');
+const mobileDeleteBtn = document.getElementById('mobile-delete-btn');
+const mobileColorDots = document.querySelectorAll('.color-dot');
+
+let activeItemWrapper = null;
+let activeItemDateKey = null;
+let activeItemItemsDiv = null;
+let hideActionBarTimeout = null;
+
 const daysOfWeekNames = ['일', '월', '화', '수', '목', '금', '토'];
 
 // 초기 설정 로드
@@ -1038,7 +1049,95 @@ function renderWeeklyView(weekStart) {
   
   memoArea.appendChild(textarea);
   weeklyList.appendChild(memoArea);
+
+  // 주간 메모는 모바일 액션 바 적용 제외 (필요 시 추가 가능)
 }
+
+function handleInputFocus(wrapper, dateKey, itemsDiv) {
+  clearTimeout(hideActionBarTimeout);
+  activeItemWrapper = wrapper;
+  activeItemDateKey = dateKey;
+  activeItemItemsDiv = itemsDiv;
+
+  updateMobileActionBarState();
+  mobileActionBar.classList.add('active');
+}
+
+function handleInputBlur() {
+  // 버튼 클릭을 위해 약간의 지연 후 숨김
+  hideActionBarTimeout = setTimeout(() => {
+    mobileActionBar.classList.remove('active');
+    activeItemWrapper = null;
+  }, 200);
+}
+
+function updateMobileActionBarState() {
+  if (!activeItemWrapper) return;
+
+  const isCompleted = activeItemWrapper.classList.contains('completed');
+  const currentColor = activeItemWrapper.dataset.color || 'none';
+
+  mobileCheckBtn.classList.toggle('active', isCompleted);
+  
+  mobileColorDots.forEach(dot => {
+    dot.classList.toggle('selected', dot.dataset.color === currentColor);
+  });
+}
+
+// 모바일 액션 바 버튼 이벤트
+mobileCheckBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!activeItemWrapper) return;
+  
+  activeItemWrapper.classList.toggle('completed');
+  updateDataFromDOM(activeItemDateKey, activeItemItemsDiv);
+  updateMobileActionBarState();
+  // 포커스 유지
+  activeItemWrapper.querySelector('.schedule-input').focus();
+  clearTimeout(hideActionBarTimeout);
+});
+
+mobileColorDots.forEach(dot => {
+  dot.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!activeItemWrapper) return;
+    
+    const color = dot.dataset.color;
+    activeItemWrapper.classList.remove('hl-yellow', 'hl-pink', 'hl-green');
+    if (color !== 'none') activeItemWrapper.classList.add(`hl-${color}`);
+    activeItemWrapper.dataset.color = color;
+    
+    updateDataFromDOM(activeItemDateKey, activeItemItemsDiv);
+    updateMobileActionBarState();
+    activeItemWrapper.querySelector('.schedule-input').focus();
+    clearTimeout(hideActionBarTimeout);
+  });
+});
+
+mobileDeleteBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (!activeItemWrapper) return;
+  
+  if (confirm('이 항목을 삭제하시겠습니까?')) {
+    activeItemWrapper.remove();
+    updateDataFromDOM(activeItemDateKey, activeItemItemsDiv);
+    mobileActionBar.classList.remove('active');
+    activeItemWrapper = null;
+  }
+});
+
+// 액션 바 클릭 시 블러 방지 (여백 클릭 포함)
+mobileActionBar.addEventListener('mousedown', (e) => {
+  // 바 내부 어디를 클릭해도 입력창의 포커스를 유지함
+  e.preventDefault();
+  clearTimeout(hideActionBarTimeout);
+});
+
+mobileActionBar.addEventListener('touchstart', (e) => {
+  // 모바일에서는 preventDefault를 사용하면 클릭이 씹힐 수 있으므로 
+  // 타이머만 제거하여 바가 사라지는 것을 방지합니다.
+  clearTimeout(hideActionBarTimeout);
+}, { passive: true }); // passive를 통해 클릭 차단을 막음
 
 function createScheduleInput(dateKey, itemObj, itemsDiv) {
   const wrapper = document.createElement('div');
@@ -1063,6 +1162,10 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
   
   input.addEventListener('input', () => updateDataFromDOM(dateKey, itemsDiv));
   
+  // 모바일 포커스 이벤트 추가
+  input.addEventListener('focus', () => handleInputFocus(wrapper, dateKey, itemsDiv));
+  input.addEventListener('blur', handleInputBlur);
+
   input.addEventListener('blur', () => {
     setTimeout(() => {
       if (!wrapper.contains(document.activeElement)) {
@@ -1083,3 +1186,13 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
 // 초기 렌더링
 render();
 renderMemos();
+
+// 서비스 워커 등록 (PWA)
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('Service Worker registered', reg))
+      .catch(err => console.log('Service Worker registration failed', err));
+  });
+}
+
