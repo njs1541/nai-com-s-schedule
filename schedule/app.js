@@ -5,6 +5,7 @@ let startDayOfWeek = 0; // 주간 뷰의 시작 요일 (0: 일요일, 1: 월요�
 let scheduleData = JSON.parse(localStorage.getItem('scheduler_data')) || {}; // 로컬스토리지에서 데이터 불러오기
 let memoData = JSON.parse(localStorage.getItem('scheduler_memo_data')) || [];
 let holidayData = JSON.parse(localStorage.getItem('scheduler_holiday_data')) || {}; // 공휴일 데이터 추가
+let weeklyMemoData = JSON.parse(localStorage.getItem('scheduler_weekly_memo_data')) || {}; // 주간 메모 데이터 추가
 
 // 대한민국 공휴일 데이터 (2024~2027)
 const SYSTEM_HOLIDAYS = {
@@ -379,7 +380,8 @@ backupBtn.addEventListener('click', () => {
       bannerUrl: localStorage.getItem('scheduler_banner_url') || '',
       bannerUpload: localStorage.getItem('scheduler_banner_upload') || '',
       darkMode: localStorage.getItem('scheduler_dark_mode') === 'true'
-    }
+    },
+    weeklyMemoData
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -445,6 +447,10 @@ restoreFileInput.addEventListener('change', (e) => {
       if (data.holidayData) {
         holidayData = data.holidayData;
         localStorage.setItem('scheduler_holiday_data', JSON.stringify(holidayData));
+      }
+      if (data.weeklyMemoData) {
+        weeklyMemoData = data.weeklyMemoData;
+        localStorage.setItem('scheduler_weekly_memo_data', JSON.stringify(weeklyMemoData));
       }
       alert('데이터 복구가 완료되었습니다.');
       render();
@@ -643,18 +649,38 @@ function createToolbar(container, updateCallback) {
     updateCallback();
   });
   
+  
   const colors = ['none', 'yellow', 'pink', 'green'];
+  
+  // 형광펜 버튼들을 그룹화
+  const colorGroup = document.createElement('div');
+  colorGroup.className = 'color-group';
+  
+  const toggleBtn = document.createElement('div');
+  toggleBtn.className = 'toolbar-btn hl-toggle-btn';
+  toggleBtn.innerHTML = '🖍️';
+  toggleBtn.title = '형광펜 펼치기/접기';
+  toggleBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isExpanded = colorGroup.classList.toggle('expanded');
+    toggleBtn.classList.toggle('active', isExpanded);
+  });
+
   colors.forEach(c => {
     const cBtn = document.createElement('div');
     cBtn.className = `toolbar-btn color-btn c-${c}`;
     cBtn.title = c === 'none' ? '기본색' : '형광펜';
-    cBtn.addEventListener('click', () => {
+    cBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       container.classList.remove('hl-yellow', 'hl-pink', 'hl-green');
       if (c !== 'none') container.classList.add(`hl-${c}`);
       container.dataset.color = c;
       updateCallback();
+      // 색상 선택 후 자동으로 접기 (선택 사항)
+      colorGroup.classList.remove('expanded');
+      toggleBtn.classList.remove('active');
     });
-    toolbar.appendChild(cBtn);
+    colorGroup.appendChild(cBtn);
   });
 
   const deleteBtn = document.createElement('div');
@@ -669,6 +695,8 @@ function createToolbar(container, updateCallback) {
   });
 
   toolbar.appendChild(checkBtn);
+  toolbar.appendChild(toggleBtn);
+  toolbar.appendChild(colorGroup);
   toolbar.appendChild(deleteBtn);
   return toolbar;
 }
@@ -987,6 +1015,29 @@ function renderWeeklyView(weekStart) {
       render();
     });
   }
+
+  // 주간 메모 영역 추가 (renderWeeklyView 끝부분)
+  const weekStartKey = formatDateKey(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate());
+  const memoArea = document.createElement('div');
+  memoArea.className = 'weekly-memo-area';
+  
+  const textarea = document.createElement('textarea');
+  textarea.className = 'weekly-memo-textarea';
+  textarea.placeholder = '이 주차의 메모를 입력하세요...';
+  textarea.value = weeklyMemoData[weekStartKey] || '';
+  
+  textarea.addEventListener('input', (e) => {
+    const val = e.target.value;
+    if (val.trim() === '') {
+      delete weeklyMemoData[weekStartKey];
+    } else {
+      weeklyMemoData[weekStartKey] = val;
+    }
+    localStorage.setItem('scheduler_weekly_memo_data', JSON.stringify(weeklyMemoData));
+  });
+  
+  memoArea.appendChild(textarea);
+  weeklyList.appendChild(memoArea);
 }
 
 function createScheduleInput(dateKey, itemObj, itemsDiv) {

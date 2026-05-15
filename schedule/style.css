@@ -120,7 +120,7 @@ header {
 .nav-controls {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem; /* 간격을 약간 줄임 */
 }
 
 .nav-controls button {
@@ -155,6 +155,13 @@ h1 {
   margin: 0;
   font-size: 1.4rem;
   font-weight: 500;
+}
+
+#current-date-display {
+  width: 280px; /* PC 환경에서의 고정 너비 */
+  max-width: 100%; /* 모바일 등 좁은 환경 대응 */
+  text-align: center;
+  white-space: nowrap;
 }
 
 .view-controls button {
@@ -666,6 +673,38 @@ footer p {
   border-color: #f44336;
 }
 
+/* 형광펜 버튼 그룹화 및 토글 스타일 */
+.color-group {
+  display: flex;
+  gap: 4px;
+  max-width: 0;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transition: max-width 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+  padding: 0;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.color-group.expanded {
+  max-width: 105px; /* 4개 버튼 (22px*4) + 간격 (4px*3) + 여백 = 약 100-105px */
+  opacity: 1;
+  visibility: visible;
+  padding: 0 4px;
+}
+
+.toolbar-btn.hl-toggle-btn {
+  font-size: 14px;
+  background: #fff;
+  transition: background-color 0.2s;
+}
+
+.toolbar-btn.hl-toggle-btn.active {
+  background-color: #eee;
+  border-color: #999;
+}
+
 .memo-item .item-toolbar {
   display: none !important;
 }
@@ -709,6 +748,48 @@ footer p {
 .weekly-more-btn:hover {
   opacity: 1;
   text-decoration: underline;
+}
+
+/* 주간 메모 영역 스타일 */
+.weekly-memo-area {
+  margin-top: 40px;
+  padding: 20px;
+  background: var(--item-bg);
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  position: relative;
+}
+
+.weekly-memo-area::before {
+  content: 'Weekly Memo';
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background: var(--surface-color);
+  padding: 0 10px;
+  font-family: var(--schedule-font);
+  font-size: 1.2rem;
+  color: var(--line-color);
+  font-weight: bold;
+}
+
+.weekly-memo-textarea {
+  width: 100%;
+  min-height: 100px;
+  border: none;
+  background: transparent;
+  font-family: var(--schedule-font);
+  font-size: 1.4rem;
+  line-height: 1.6;
+  color: var(--text-color);
+  resize: vertical;
+  outline: none;
+  padding: 5px;
+}
+
+.weekly-memo-textarea::placeholder {
+  color: #ccc;
+  font-style: italic;
 }
 
 /* 일정 검색 패널 */
