@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="style.css?v=1.2">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#ffffff">
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 </head>
 
 <body>
@@ -49,6 +53,8 @@
         <button id="search-btn" title="검색">🔍</button>
         <button id="settings-btn" title="설정">⚙️</button>
         <button id="memo-btn" title="메모">📝</button>
+        <button id="login-btn" title="구글 로그인" style="background-color: #4285F4; color: white;">로그인</button>
+        <button id="logout-btn" title="로그아웃" class="hidden">로그아웃</button>
       </div>
     </header>
 
@@ -168,6 +174,7 @@
   </div>
 
   <script src="app.js?v=1.2"></script>
+  <script src="firebase-sync.js?v=1.0"></script>
 </body>
 
 </html>

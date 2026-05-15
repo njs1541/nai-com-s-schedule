@@ -141,6 +141,8 @@ header {
   padding: 0.2rem 0.6rem !important;
   margin: 0 5px;
   background-color: #fdfdfd !important;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .today-btn:hover {
@@ -162,6 +164,14 @@ h1 {
   max-width: 100%; /* 모바일 등 좁은 환경 대응 */
   text-align: center;
   white-space: nowrap;
+}
+
+.view-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+  flex-wrap: wrap; /* 공간이 부족하면 자연스럽게 아래로 줄바꿈 */
 }
 
 .view-controls button {
