@@ -2,20 +2,36 @@
   "name": "가벼운 메모장 스케줄러",
   "short_name": "스케줄러",
   "description": "손글씨 느낌의 심플한 주간/월간 스케줄러",
-  "start_url": "index.html",
+  "start_url": "/nai-com-s-schedule/index.html",
+  "scope": "/nai-com-s-schedule/",
+  "id": "/nai-com-s-schedule/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#f5f5f0",
   "theme_color": "#ffffff",
+  "lang": "ko",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"],
   "icons": [
     {
       "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
 }
