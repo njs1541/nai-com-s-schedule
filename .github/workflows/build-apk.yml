@@ -7,6 +7,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     
+    env:
+      BUBBLEWRAP_KEYSTORE_PASSWORD: android
+      BUBBLEWRAP_KEY_PASSWORD: android
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,23 +32,27 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
+      - name: Configure Bubblewrap (JDK & SDK 경로 사전 설정)
+        run: |
+          bubblewrap updateConfig \
+            --jdkPath="$JAVA_HOME" \
+            --androidSdkPath="$ANDROID_HOME"
+
+      - name: Verify Bubblewrap config
+        run: bubblewrap doctor
+
       - name: Create TWA project directory
         run: mkdir -p twa-build
 
-      - name: Initialize TWA project with Bubblewrap
+      - name: Initialize TWA project
         working-directory: twa-build
         run: |
-          # JDK와 Android SDK 경로를 환경변수로 설정하여 bubblewrap이 묻지 않도록 함
-          export JAVA_HOME=$JAVA_HOME
-          export ANDROID_HOME=$ANDROID_HOME
-          
-          # bubblewrap init 실행 (--yes 는 대화형 질문을 모두 자동 수락)
           bubblewrap init \
             --manifest="https://njs1541.github.io/nai-com-s-schedule/manifest.json" \
             --directory="." \
             --skipPwaValidation
 
-      - name: Generate signing key
+      - name: Generate debug signing key
         working-directory: twa-build
         run: |
           keytool -genkeypair \
@@ -63,18 +71,13 @@ jobs:
           bubblewrap build \
             --skipPwaValidation \
             --signingKeyPath="./mykeystore.keystore" \
-            --signingKeyAlias="mykey" \
-            2>&1 <<EOF
-          android
-          android
-          EOF
+            --signingKeyAlias="mykey"
 
       - name: List build outputs
         working-directory: twa-build
         run: |
           echo "=== All APK/AAB files ==="
           find . -name "*.apk" -o -name "*.aab" 2>/dev/null
-          echo "=== Current directory ==="
           ls -la *.apk 2>/dev/null || echo "No APK found in current dir"
 
       - name: Upload APK artifact
