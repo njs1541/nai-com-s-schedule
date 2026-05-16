@@ -231,6 +231,10 @@ footer p {
 }
 
 /* 월간 뷰 (Monthly View) */
+#monthly-view {
+  padding-right: 65px; /* 왼쪽 65px과 맞춰서 가운데 정렬 */
+}
+
 .calendar-grid-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -1085,6 +1089,10 @@ body.has-banner #memo-panel {
     padding-left: 25px; /* 왼쪽 여백 더 축소 */
     padding-right: 10px;
     min-height: auto;
+  }
+
+  #monthly-view {
+    padding-right: 25px; /* 모바일에서도 왼쪽 25px과 맞춰서 가운데 정렬 */
   }
 
   .calendar-grid-header {

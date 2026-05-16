@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.njs1541.scheduler",
+    "sha256_cert_fingerprints": [
+      "DB:1D:24:6E:C0:26:64:08:82:68:13:7D:E9:E7:A3:96:80:4E:DB:8B:AD:0B:22:EF:0E:42:C1:0C:D1:77:25:79"
+    ]
+  }
+}]

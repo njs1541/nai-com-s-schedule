@@ -60,6 +60,15 @@ jobs:
               namespace 'io.github.njs1541.scheduler'
               compileSdk 34
 
+              signingConfigs {
+                  debug {
+                      storeFile file("../../release.keystore")
+                      storePassword "android"
+                      keyAlias "scheduler"
+                      keyPassword "android"
+                  }
+              }
+
               defaultConfig {
                   applicationId "io.github.njs1541.scheduler"
                   minSdk 19

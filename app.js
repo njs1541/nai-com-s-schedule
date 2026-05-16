@@ -1285,6 +1285,26 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
 render();
 renderMemos();
 
+// 모바일 키보드 대응 액션바 위치 조정
+if (window.visualViewport) {
+  const updateActionBarPosition = () => {
+    // 가상 키보드가 올라왔을 때의 offset 계산 (layout viewport의 bottom과 visual viewport의 bottom 차이)
+    const offset = Math.max(0, window.innerHeight - (window.visualViewport.height + window.visualViewport.offsetTop));
+    
+    // 키보드가 올라왔을 때만 적용, 아니면 원래대로(bottom: 0)
+    if (offset > 0) {
+      mobileActionBar.style.bottom = offset + 'px';
+      mobileActionBar.style.transition = 'none'; // 키보드 이동 시 지연 없이 따라가도록 트랜지션 해제
+    } else {
+      mobileActionBar.style.bottom = '0px';
+      mobileActionBar.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s';
+    }
+  };
+
+  window.visualViewport.addEventListener('resize', updateActionBarPosition);
+  window.visualViewport.addEventListener('scroll', updateActionBarPosition);
+}
+
 // 서비스 워커 등록 (PWA)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
