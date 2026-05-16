@@ -32,14 +32,12 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Configure Bubblewrap (JDK & SDK 경로 사전 설정)
+      - name: Pre-create Bubblewrap config (대화형 프롬프트 방지)
         run: |
-          bubblewrap updateConfig \
-            --jdkPath="$JAVA_HOME" \
-            --androidSdkPath="$ANDROID_HOME"
-
-      - name: Verify Bubblewrap config
-        run: bubblewrap doctor
+          mkdir -p ~/.bubblewrap
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_HOME\"}" > ~/.bubblewrap/config.json
+          echo "=== Bubblewrap config ==="
+          cat ~/.bubblewrap/config.json
 
       - name: Create TWA project directory
         run: mkdir -p twa-build
