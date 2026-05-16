@@ -159,6 +159,13 @@ jobs:
           # --- 아이콘 다운로드 ---
           curl -sL "https://njs1541.github.io/nai-com-s-schedule/icon-512.png" -o twa-app/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
+          # --- gradle.properties (AndroidX 활성화) ---
+          cat > twa-app/gradle.properties << 'EOF'
+          android.useAndroidX=true
+          android.enableJetifier=true
+          org.gradle.jvmargs=-Xmx1536m
+          EOF
+
           # --- gradle-wrapper.properties ---
           cat > twa-app/gradle/wrapper/gradle-wrapper.properties << 'EOF'
           distributionBase=GRADLE_USER_HOME
