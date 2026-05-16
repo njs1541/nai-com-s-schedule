@@ -70,7 +70,7 @@ jobs:
                   manifestPlaceholders = [
                       hostName: "njs1541.github.io",
                       defaultUrl: "https://njs1541.github.io/nai-com-s-schedule/",
-                      launcherName: "스케줄러",
+                      launcherName: "js스케쥴러",
                       assetStatements: '[{ "relation": ["delegate_permission/common.handle_all_urls"], "target": { "namespace": "web", "site": "https://njs1541.github.io" } }]'
                   ]
               }
@@ -113,7 +113,7 @@ jobs:
                       android:value='${assetStatements}' />
 
                   <activity
-                      android:name="android.support.customtabs.trusted.LauncherActivity"
+                      android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
                       android:exported="true"
                       android:label="${launcherName}">
 
@@ -153,7 +153,7 @@ jobs:
           cat > twa-app/app/src/main/res/values/strings.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <string name="app_name">스케줄러</string>
+              <string name="app_name">js스케쥴러</string>
           </resources>
           EOF
 
