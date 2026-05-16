@@ -63,9 +63,14 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// 깊은 비교(Deep Equal) 함수: JSON.stringify는 객체 키 순서가 다르면 다르다고 판단하는 버그 방지용
+// 깊은 비교(Deep Equal) 함수: 배열 타입 분기 추가
 function deepEqual(a, b) {
   if (a === b) return true;
+  // 배열은 인덱스/순서 포함 비교
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((item, i) => deepEqual(item, b[i]));
+  }
   if (a == null || typeof a != "object" || b == null || typeof b != "object") return false;
   
   let keysA = Object.keys(a), keysB = Object.keys(b);

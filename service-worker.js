@@ -1,9 +1,10 @@
-const CACHE_NAME = 'scheduler-v3';
+const CACHE_NAME = 'scheduler-v4';
 const ASSETS = [
   '/nai-com-s-schedule/',
   '/nai-com-s-schedule/index.html',
-  '/nai-com-s-schedule/style.css',
-  '/nai-com-s-schedule/app.js',
+  '/nai-com-s-schedule/style.css?v=1.2',
+  '/nai-com-s-schedule/app.js?v=1.2',
+  '/nai-com-s-schedule/firebase-sync.js?v=1.0',
   '/nai-com-s-schedule/manifest.json',
   '/nai-com-s-schedule/icon-192.png',
   '/nai-com-s-schedule/icon-512.png'

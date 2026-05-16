@@ -104,6 +104,7 @@ const weeklyViewBtn = document.getElementById('weekly-view-btn');
 
 const monthlyView = document.getElementById('monthly-view');
 const calendarGrid = document.getElementById('calendar-grid');
+const calendarGridHeader = document.getElementById('calendar-grid-header');
 
 const weeklyView = document.getElementById('weekly-view');
 const startDaySelect = document.getElementById('start-day-select');
@@ -979,11 +980,26 @@ function updateDataFromDOM(dateKey, itemsDiv) {
 
 // 월간 뷰
 function renderMonthlyView() {
+  // 요일 헤더 동적 생성 (startDayOfWeek 반영)
+  calendarGridHeader.innerHTML = '';
+  for (let d = 0; d < 7; d++) {
+    const headerCell = document.createElement('div');
+    const dayIdx = (startDayOfWeek + d) % 7;
+    headerCell.textContent = daysOfWeekNames[dayIdx];
+    if (dayIdx === 0) headerCell.style.color = '#ef9a9a'; // 일요일
+    else if (dayIdx === 6) headerCell.style.color = '#90caf9'; // 토요일
+    calendarGridHeader.appendChild(headerCell);
+  }
+
   calendarGrid.innerHTML = '';
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const firstDay = new Date(year, month, 1).getDay();
+  // startDayOfWeek를 반영한 첫 날 오프셋 계산 (0=일, 1=월)
+  const rawFirstDay = new Date(year, month, 1).getDay();
+  const firstDay = (rawFirstDay - startDayOfWeek + 7) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+  // 루프 바깥에서 오늘 날짜를 한 번만 생성
+  const today = new Date();
   
   for (let i = 0; i < firstDay; i++) {
     const emptyDiv = document.createElement('div');
@@ -995,7 +1011,6 @@ function renderMonthlyView() {
     const dayDiv = document.createElement('div');
     dayDiv.className = 'calendar-day';
     
-    const today = new Date();
     if (year === today.getFullYear() && month === today.getMonth() && i === today.getDate()) {
       dayDiv.classList.add('today');
     }
@@ -1295,9 +1310,9 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
   
   // 모바일 포커스 이벤트 추가
   input.addEventListener('focus', () => handleInputFocus(wrapper, dateKey, itemsDiv));
-  input.addEventListener('blur', handleInputBlur);
-
+  // blur 핸들러를 하나로 통합 (이중 등록 방지)
   input.addEventListener('blur', () => {
+    handleInputBlur(); // 액션 바 숨김 처리
     setTimeout(() => {
       if (!wrapper.contains(document.activeElement)) {
         if (input.value.trim() === '') {
