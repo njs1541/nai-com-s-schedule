@@ -612,46 +612,73 @@ function handleDragEnd() {
 }
 
 // [모바일 터치 드래그 로직]
-let touchTimer = null;
 let touchClone = null;
+let touchAutoScrollRAF = null;
 
 function handleTouchStart(e) {
-  if (e.target.tagName.toLowerCase() === 'input' || e.target.tagName.toLowerCase() === 'textarea') return;
+  // 드래그 핸들(.drag-handle)에서만 드래그 시작 가능
+  const handle = e.target.closest('.drag-handle');
+  if (!handle) return;
+  
+  e.preventDefault(); // 스크롤 방지
   const touch = e.touches[0];
   const targetItem = this;
   
-  touchTimer = setTimeout(() => {
-    draggedItem = targetItem;
-    targetItem.classList.add('dragging');
-    
-    touchClone = targetItem.cloneNode(true);
-    touchClone.style.position = 'fixed';
-    touchClone.style.zIndex = '9999';
-    touchClone.style.opacity = '0.8';
-    touchClone.style.pointerEvents = 'none';
-    touchClone.style.width = targetItem.offsetWidth + 'px';
-    document.body.appendChild(touchClone);
-    
-    moveClone(touch);
-    if (navigator.vibrate) navigator.vibrate(50);
-  }, 400); // 400ms 길게 누르기
+  draggedItem = targetItem;
+  targetItem.classList.add('dragging');
+  
+  // 접혀있는 항목들을 모두 펼치기 (같은 컨테이너 내)
+  const container = targetItem.parentNode;
+  if (container) {
+    const collapsedItems = container.querySelectorAll('.collapsed-item');
+    collapsedItems.forEach(el => el.classList.add('show'));
+    const moreBtn = container.querySelector('.weekly-more-btn');
+    if (moreBtn) {
+      moreBtn.classList.add('expanded');
+      moreBtn.textContent = '접기';
+    }
+  }
+  
+  touchClone = targetItem.cloneNode(true);
+  touchClone.style.position = 'fixed';
+  touchClone.style.zIndex = '9999';
+  touchClone.style.opacity = '0.7';
+  touchClone.style.pointerEvents = 'none';
+  touchClone.style.width = targetItem.offsetWidth + 'px';
+  touchClone.style.boxShadow = '0 8px 25px rgba(0,0,0,0.3)';
+  touchClone.style.borderRadius = '8px';
+  touchClone.style.transform = 'scale(1.03)';
+  document.body.appendChild(touchClone);
+  
+  moveClone(touch);
+  if (navigator.vibrate) navigator.vibrate(50);
 }
 
 function moveClone(touch) {
   if (!touchClone) return;
   touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
-  touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
+  touchClone.style.top = (touch.clientY - 25) + 'px';
+}
+
+// 화면 가장자리에서 자동 스크롤
+function autoScroll(touchY) {
+  const edgeSize = 60;
+  const scrollSpeed = 8;
+  
+  if (touchY < edgeSize) {
+    window.scrollBy(0, -scrollSpeed);
+  } else if (touchY > window.innerHeight - edgeSize) {
+    window.scrollBy(0, scrollSpeed);
+  }
 }
 
 function handleTouchMove(e) {
-  if (!draggedItem) {
-    clearTimeout(touchTimer);
-    return;
-  }
+  if (!draggedItem) return;
   
   e.preventDefault(); // 스크롤 방지
   const touch = e.touches[0];
   moveClone(touch);
+  autoScroll(touch.clientY);
   
   const elemBelow = document.elementFromPoint(touch.clientX, touch.clientY);
   if (!elemBelow) return;
@@ -665,7 +692,6 @@ function handleTouchMove(e) {
 }
 
 function handleTouchEnd(e) {
-  clearTimeout(touchTimer);
   if (!draggedItem) return;
   
   if (touchClone) {
@@ -680,7 +706,7 @@ function handleTouchEnd(e) {
     targetItem.classList.remove('drag-over');
     
     const container = draggedItem.parentNode;
-    const allItems = [...container.children];
+    const allItems = [...container.children].filter(el => el.classList.contains('item-wrapper') || el.classList.contains('memo-item'));
     const draggedIdx = allItems.indexOf(draggedItem);
     const targetIdx = allItems.indexOf(targetItem);
     
@@ -707,7 +733,7 @@ function addDragEvents(elem, updateCallback) {
   elem.addEventListener('drop', handleDrop);
   elem.addEventListener('dragend', handleDragEnd);
 
-  // 모바일 터치 이벤트
+  // 모바일 터치 이벤트 (드래그 핸들 기반)
   elem.addEventListener('touchstart', function(e) {
     currentDragCallback = updateCallback;
     handleTouchStart.call(this, e);
@@ -1244,6 +1270,12 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
   if (itemObj.color && itemObj.color !== 'none') wrapper.classList.add(`hl-${itemObj.color}`);
   wrapper.dataset.color = itemObj.color || 'none';
   
+  // 모바일용 드래그 핸들 추가
+  const dragHandle = document.createElement('div');
+  dragHandle.className = 'drag-handle';
+  dragHandle.innerHTML = '☰';
+  dragHandle.title = '길게 눌러 순서 변경';
+  
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'schedule-input';
@@ -1255,6 +1287,7 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
     setupWeeklyMoreBtn(dateKey, itemsDiv);
   });
   
+  wrapper.appendChild(dragHandle);
   wrapper.appendChild(toolbar);
   wrapper.appendChild(input);
   

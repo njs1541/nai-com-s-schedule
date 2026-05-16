@@ -642,7 +642,13 @@ footer p {
 }
 
 .item-wrapper.drag-over {
-  border-top: 2px solid #888;
+  border-top: 3px solid var(--line-color);
+  padding-top: 5px;
+}
+
+/* 드래그 핸들 (기본 숨김 - 모바일에서만 표시) */
+.drag-handle {
+  display: none;
 }
 
 .item-toolbar {
@@ -1159,11 +1165,50 @@ body.has-banner #memo-panel {
     display: none !important;
   }
 
+  /* 모바일 드래그 핸들 표시 */
+  .drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    min-width: 30px;
+    height: 48px;
+    font-size: 1.1rem;
+    color: #aaa;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border-color);
+    margin-right: 4px;
+    transition: color 0.2s, background 0.2s;
+  }
+  
+  .drag-handle:active {
+    color: var(--text-color);
+    background: rgba(0, 0, 0, 0.05);
+    cursor: grabbing;
+  }
+
+  .item-wrapper.dragging {
+    opacity: 0.3;
+    background: var(--header-bg);
+    border: 2px dashed var(--border-color);
+  }
+
+  .item-wrapper.drag-over {
+    border-top: 3px solid var(--line-color);
+    margin-top: 4px;
+    transition: margin-top 0.15s ease;
+  }
+
   .schedule-input {
     height: 48px;
     line-height: 48px;
     font-size: 1.6rem;
-    padding-right: 10px; /* 툴바가 사라졌으므로 여백 축소 */
+    padding-right: 10px;
+    flex: 1;
+    min-width: 0; /* flex 아이템 overflow 방지 */
   }
 
   .color-group.expanded {
