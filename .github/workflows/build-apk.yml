@@ -1,0 +1,103 @@
+name: Build Android APK (TWA)
+
+on:
+  workflow_dispatch: # 수동 실행 버튼
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Bubblewrap
+        run: npm install -g @nicolo-ribaudo/bubblewrap@1.25.0
+
+      - name: Initialize TWA project
+        run: |
+          mkdir -p twa-build && cd twa-build
+          
+          # bubblewrap 설정 파일 생성
+          cat > twa-manifest.json << 'EOF'
+          {
+            "packageId": "io.github.njs1541.scheduler",
+            "host": "njs1541.github.io",
+            "name": "가벼운 메모장 스케줄러",
+            "launcherName": "스케줄러",
+            "display": "standalone",
+            "themeColor": "#ffffff",
+            "themeColorDark": "#1a1a1a",
+            "navigationColor": "#ffffff",
+            "navigationColorDark": "#1a1a1a",
+            "navigationDividerColor": "#ffffff",
+            "navigationDividerColorDark": "#1a1a1a",
+            "backgroundColor": "#f5f5f0",
+            "enableNotifications": false,
+            "startUrl": "/nai-com-s-schedule/index.html",
+            "iconUrl": "https://njs1541.github.io/nai-com-s-schedule/icon-512.png",
+            "maskableIconUrl": "https://njs1541.github.io/nai-com-s-schedule/icon-512.png",
+            "shortcuts": [],
+            "signingKey": {
+              "path": "./mykeystore.keystore",
+              "alias": "mykey"
+            },
+            "appVersionCode": 1,
+            "appVersionName": "1.0.0",
+            "splashScreenFadeOutDuration": 300,
+            "enableSiteSettingsShortcut": true,
+            "isChromeOSOnly": false,
+            "orientation": "any",
+            "fingerprints": []
+          }
+          EOF
+
+      - name: Build TWA with Bubblewrap
+        run: |
+          cd twa-build
+          
+          # bubblewrap init (자동 응답)
+          echo "" | bubblewrap init --manifest="https://njs1541.github.io/nai-com-s-schedule/manifest.json" --directory="."
+          
+          # 서명 키 생성 (디버그용)
+          keytool -genkeypair \
+            -alias mykey \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -keystore mykeystore.keystore \
+            -storepass android \
+            -keypass android \
+            -dname "CN=Debug, OU=Debug, O=Debug, L=Seoul, ST=Seoul, C=KR"
+          
+          # APK 빌드
+          bubblewrap build --signingKeyPath="./mykeystore.keystore" --signingKeyAlias="mykey" --signingKeyPassword="android" --signingKeyStorePassword="android" || true
+          
+          # 빌드 결과물 확인
+          echo "=== Build output files ==="
+          find . -name "*.apk" -o -name "*.aab" | head -20
+          ls -la *.apk 2>/dev/null || echo "No APK in current dir"
+          ls -la app/build/outputs/ 2>/dev/null || true
+
+      - name: Find and upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: scheduler-apk
+          path: |
+            twa-build/*.apk
+            twa-build/app/build/outputs/**/*.apk
+          if-no-files-found: warn
