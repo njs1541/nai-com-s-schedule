@@ -157,7 +157,7 @@ function syncToFirebase() {
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     };
     
-    db.collection('users').doc(currentUser.uid).set(data, { merge: true })
+    db.collection('users').doc(currentUser.uid).set(data)
       .catch((error) => console.error("데이터 저장 실패:", error));
   }, 1000);
 }

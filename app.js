@@ -861,16 +861,14 @@ function renderMemos() {
     contentTextarea.placeholder = '메모 내용...';
     contentTextarea.value = memo.content || '';
 
-    titleInput.addEventListener('input', updateMemoDataFromDOM);
-    contentTextarea.addEventListener('input', updateMemoDataFromDOM);
-    
     memoDiv.addEventListener('focusout', () => {
       setTimeout(() => {
         if (!memoDiv.contains(document.activeElement)) {
           if (titleInput.value.trim() === '' && contentTextarea.value.trim() === '') {
             memoDiv.remove();
-            updateMemoDataFromDOM();
           }
+          // 포커스가 빠질 때 데이터 업데이트 및 저장
+          updateMemoDataFromDOM();
         }
       }, 0);
     });
@@ -1184,7 +1182,7 @@ function renderWeeklyView(weekStart) {
   textarea.placeholder = '이 주차의 메모를 입력하세요...';
   textarea.value = weeklyMemoData[weekStartKey] || '';
   
-  textarea.addEventListener('input', (e) => {
+  textarea.addEventListener('change', (e) => {
     const val = e.target.value;
     if (val.trim() === '') {
       delete weeklyMemoData[weekStartKey];
@@ -1306,20 +1304,19 @@ function createScheduleInput(dateKey, itemObj, itemsDiv) {
   wrapper.appendChild(toolbar);
   wrapper.appendChild(input);
   
-  input.addEventListener('input', () => updateDataFromDOM(dateKey, itemsDiv));
-  
   // 모바일 포커스 이벤트 추가
   input.addEventListener('focus', () => handleInputFocus(wrapper, dateKey, itemsDiv));
-  // blur 핸들러를 하나로 통합 (이중 등록 방지)
+  // blur 핸들러를 하나로 통합하여 포커스가 빠질 때만 데이터 업데이트 및 저장
   input.addEventListener('blur', () => {
     handleInputBlur(); // 액션 바 숨김 처리
     setTimeout(() => {
       if (!wrapper.contains(document.activeElement)) {
         if (input.value.trim() === '') {
           wrapper.remove();
-          updateDataFromDOM(dateKey, itemsDiv);
-          setupWeeklyMoreBtn(dateKey, itemsDiv);
         }
+        // 내용 삭제 여부와 상관없이 무조건 현재 상태를 저장
+        updateDataFromDOM(dateKey, itemsDiv);
+        setupWeeklyMoreBtn(dateKey, itemsDiv);
       }
     }, 0);
   });
