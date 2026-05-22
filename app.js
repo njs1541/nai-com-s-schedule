@@ -6,6 +6,8 @@ let scheduleData = JSON.parse(localStorage.getItem('scheduler_data')) || {}; // 
 let memoData = JSON.parse(localStorage.getItem('scheduler_memo_data')) || [];
 let holidayData = JSON.parse(localStorage.getItem('scheduler_holiday_data')) || {}; // 공휴일 데이터 추가
 let weeklyMemoData = JSON.parse(localStorage.getItem('scheduler_weekly_memo_data')) || {}; // 주간 메모 데이터 추가
+let accountData = JSON.parse(localStorage.getItem('scheduler_account_data')) || {}; // 가계부 데이터 추가
+
 
 // 대한민국 공휴일 데이터 (2024~2027)
 const SYSTEM_HOLIDAYS = {
@@ -142,6 +144,29 @@ const closeSearchBtn = document.getElementById('close-search-btn');
 const searchInput = document.getElementById('search-input');
 const filterCompleted = document.getElementById('filter-completed');
 const searchResults = document.getElementById('search-results');
+
+// 가계부 DOM 엘리먼트
+const accountBtn = document.getElementById('account-btn');
+const accountPanel = document.getElementById('account-panel');
+const closeAccountBtn = document.getElementById('close-account-btn');
+const summaryMonthVal = document.getElementById('summary-month-val');
+const monthTotalIncome = document.getElementById('month-total-income');
+const monthTotalExpense = document.getElementById('month-total-expense');
+const monthTotalBalance = document.getElementById('month-total-balance');
+const accountDateTitle = document.getElementById('account-date-title');
+const typeExpenseBtn = document.getElementById('type-expense-btn');
+const typeIncomeBtn = document.getElementById('type-income-btn');
+const accountAmountInput = document.getElementById('account-amount-input');
+const accountCategoryInput = document.getElementById('account-category-input');
+const accountMemoInput = document.getElementById('account-memo-input');
+const addAccountItemBtn = document.getElementById('add-account-item-btn');
+const accountList = document.getElementById('account-list');
+const accountPrevDayBtn = document.getElementById('account-prev-day-btn');
+const accountNextDayBtn = document.getElementById('account-next-day-btn');
+const accountDatePicker = document.getElementById('account-date-picker');
+
+let selectedAccountDate = new Date(currentDate); // 현재 가계부 선택 날짜
+let currentAccountType = 'expense'; // 'expense' 또는 'income'
 
 // 모바일 액션 바 관련
 const mobileActionBar = document.getElementById('mobile-action-bar');
@@ -385,6 +410,7 @@ backupBtn.addEventListener('click', () => {
     scheduleData,
     memoData,
     holidayData,
+    accountData, // <-- 가계부 데이터 백업 추가
     settings: {
       startDayOfWeek,
       bgColor: document.documentElement.style.getPropertyValue('--bg-color') || '#f5f5f0',
@@ -465,9 +491,14 @@ restoreFileInput.addEventListener('change', (e) => {
         weeklyMemoData = data.weeklyMemoData;
         localStorage.setItem('scheduler_weekly_memo_data', JSON.stringify(weeklyMemoData));
       }
+      if (data.accountData) {
+        accountData = data.accountData;
+        localStorage.setItem('scheduler_account_data', JSON.stringify(accountData));
+      }
       alert('데이터 복구가 완료되었습니다.');
       render();
       renderMemos();
+      renderAccountPanel(); // 가계부 패널도 실시간으로 갱신
     } catch (err) {
       alert('파일을 읽는 데 실패했습니다. 올바른 백업 파일인지 확인해주세요.');
     }
@@ -483,6 +514,11 @@ memoBtn.addEventListener('click', () => {
     memoBtn.classList.remove('active');
   } else {
     memoBtn.classList.add('active');
+    // 다른 패널 닫기
+    searchPanel.classList.add('hidden');
+    searchBtn.classList.remove('active');
+    accountPanel.classList.add('hidden');
+    accountBtn.classList.remove('active');
   }
 });
 
@@ -500,6 +536,12 @@ searchBtn.addEventListener('click', () => {
     searchBtn.classList.remove('active');
   } else {
     searchBtn.classList.add('active');
+    // 다른 패널 닫기
+    memoPanel.classList.add('hidden');
+    memoBtn.classList.remove('active');
+    accountPanel.classList.add('hidden');
+    accountBtn.classList.remove('active');
+    
     searchInput.focus();
     performSearch(); // 열릴 때 검색 수행
   }
@@ -509,6 +551,98 @@ closeSearchBtn.addEventListener('click', () => {
   searchPanel.classList.add('hidden');
   searchBtn.classList.remove('active');
 });
+
+// 가계부 패널 토글
+accountBtn.addEventListener('click', () => {
+  const isHidden = accountPanel.classList.toggle('hidden');
+  if (isHidden) {
+    accountBtn.classList.remove('active');
+  } else {
+    accountBtn.classList.add('active');
+    // 다른 패널 닫기
+    memoPanel.classList.add('hidden');
+    memoBtn.classList.remove('active');
+    searchPanel.classList.add('hidden');
+    searchBtn.classList.remove('active');
+    
+    // 날짜 동기화 및 패널 갱신
+    selectedAccountDate = new Date(currentDate);
+    renderAccountPanel();
+  }
+});
+
+if (closeAccountBtn) {
+  closeAccountBtn.addEventListener('click', () => {
+    accountPanel.classList.add('hidden');
+    accountBtn.classList.remove('active');
+  });
+}
+
+// 가계부 수입/지출 타입 설정 버튼 이벤트
+if (typeExpenseBtn && typeIncomeBtn) {
+  typeExpenseBtn.addEventListener('click', () => {
+    currentAccountType = 'expense';
+    typeExpenseBtn.classList.add('active');
+    typeIncomeBtn.classList.remove('active');
+  });
+
+  typeIncomeBtn.addEventListener('click', () => {
+    currentAccountType = 'income';
+    typeIncomeBtn.classList.add('active');
+    typeExpenseBtn.classList.remove('active');
+  });
+}
+
+// 가계부 내역 추가 버튼 및 입력 엔터 키 대응 이벤트
+if (addAccountItemBtn) {
+  addAccountItemBtn.addEventListener('click', addAccountItem);
+}
+
+[accountAmountInput, accountCategoryInput, accountMemoInput].forEach(input => {
+  if (input) {
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        addAccountItem();
+      }
+    });
+  }
+});
+
+// 가계부 날짜 이전/다음 날짜 이동 이벤트
+if (accountPrevDayBtn) {
+  accountPrevDayBtn.addEventListener('click', () => {
+    selectedAccountDate.setDate(selectedAccountDate.getDate() - 1);
+    renderAccountPanel();
+    // 메인 달력 기준일(currentDate)도 함께 동기화하여 일관성 유지
+    currentDate = new Date(selectedAccountDate);
+    render();
+  });
+}
+
+if (accountNextDayBtn) {
+  accountNextDayBtn.addEventListener('click', () => {
+    selectedAccountDate.setDate(selectedAccountDate.getDate() + 1);
+    renderAccountPanel();
+    currentDate = new Date(selectedAccountDate);
+    render();
+  });
+}
+
+// 가계부 날짜 타이틀 클릭 시 숨겨진 데이트피커 캘린더 팝업
+if (accountDateTitle && accountDatePicker) {
+  accountDateTitle.addEventListener('click', () => {
+    accountDatePicker.showPicker(); // 모바일 표준 데이트피커 캘린더 트리거
+  });
+
+  accountDatePicker.addEventListener('change', (e) => {
+    if (e.target.value) {
+      selectedAccountDate = new Date(e.target.value);
+      renderAccountPanel();
+      currentDate = new Date(selectedAccountDate);
+      render();
+    }
+  });
+}
 
 // 검색 입력 및 필터 이벤트
 searchInput.addEventListener('input', performSearch);
@@ -945,6 +1079,12 @@ function render() {
     currentDateDisplay.textContent = `${weekStart.getMonth() + 1}월 ${weekStart.getDate()}일 - ${weekEnd.getMonth() + 1}월 ${weekEnd.getDate()}일`;
     renderWeeklyView(weekStart);
   }
+
+  // 가계부 패널이 활성화되어 있을 때 네비게이션 이동 시 가계부 날짜도 동기화하고 패널 갱신
+  if (accountPanel && !accountPanel.classList.contains('hidden')) {
+    selectedAccountDate = new Date(currentDate);
+    renderAccountPanel();
+  }
 }
 
 function formatDateKey(year, month, date) {
@@ -974,6 +1114,217 @@ function updateDataFromDOM(dateKey, itemsDiv) {
   }
   localStorage.setItem('scheduler_data', JSON.stringify(scheduleData));
   if (!searchPanel.classList.contains('hidden')) performSearch();
+}
+
+// ==========================================
+// 💰 가계부 (Ledger) 비즈니스 로직 및 이벤트 핸들링
+// ==========================================
+
+function saveAccountData() {
+  localStorage.setItem('scheduler_account_data', JSON.stringify(accountData));
+}
+
+// 가계부 사이드 패널 렌더링 (대시보드 통계 & 당일 리스트)
+function renderAccountPanel() {
+  const year = selectedAccountDate.getFullYear();
+  const month = selectedAccountDate.getMonth();
+  const dateKey = formatDateKey(year, month, selectedAccountDate.getDate());
+  
+  // 1. 대시보드 요약 타이틀 및 통계 연산
+  summaryMonthVal.textContent = month + 1;
+  accountDateTitle.textContent = `${year}년 ${month + 1}월 ${selectedAccountDate.getDate()}일 내역`;
+  
+  // 모바일 캘린더 피커 기본 포커싱 날짜 연계 동기화
+  if (accountDatePicker) {
+    const y = selectedAccountDate.getFullYear();
+    const m = String(selectedAccountDate.getMonth() + 1).padStart(2, '0');
+    const d = String(selectedAccountDate.getDate()).padStart(2, '0');
+    accountDatePicker.value = `${y}-${m}-${d}`;
+  }
+  
+  let monthIncome = 0;
+  let monthExpense = 0;
+  
+  // 당월의 모든 가계부 내역 합산
+  Object.keys(accountData).forEach(key => {
+    const keyDate = new Date(key);
+    if (keyDate.getFullYear() === year && keyDate.getMonth() === month) {
+      const items = accountData[key] || [];
+      items.forEach(item => {
+        const val = Number(item.amount) || 0;
+        if (item.type === 'income') monthIncome += val;
+        else monthExpense += val;
+      });
+    }
+  });
+  
+  const balance = monthIncome - monthExpense;
+  
+  monthTotalIncome.textContent = `${monthIncome.toLocaleString()}원`;
+  monthTotalExpense.textContent = `${monthExpense.toLocaleString()}원`;
+  monthTotalBalance.textContent = `${balance >= 0 ? '+' : ''}${balance.toLocaleString()}원`;
+  
+  // 잔액 컬러링
+  if (balance > 0) {
+    monthTotalBalance.style.color = '#1e88e5';
+  } else if (balance < 0) {
+    monthTotalBalance.style.color = '#e53935';
+  } else {
+    monthTotalBalance.style.color = 'var(--text-color)';
+  }
+
+  // 2. 당일 상세 내역 렌더링
+  accountList.innerHTML = '';
+  const dayItems = accountData[dateKey] || [];
+  
+  if (dayItems.length === 0) {
+    accountList.innerHTML = '<p style="text-align:center; opacity:0.5; margin: 20px 0;">입력된 내역이 없습니다.</p>';
+    return;
+  }
+  
+  dayItems.forEach((item, idx) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.className = `account-item ${item.type}`;
+    
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'account-item-info';
+    
+    const catMemoDiv = document.createElement('div');
+    catMemoDiv.className = 'account-item-cat-memo';
+    
+    const catSpan = document.createElement('span');
+    catSpan.className = 'account-item-cat';
+    catSpan.textContent = item.category || '기타';
+    
+    const memoSpan = document.createElement('span');
+    memoSpan.className = 'account-item-memo';
+    memoSpan.textContent = item.memo || '';
+    
+    catMemoDiv.appendChild(catSpan);
+    if (item.memo) catMemoDiv.appendChild(memoSpan);
+    
+    infoDiv.appendChild(catMemoDiv);
+    
+    const amountDiv = document.createElement('div');
+    amountDiv.className = 'account-item-amount';
+    amountDiv.textContent = `${item.type === 'income' ? '+' : '-'}${Number(item.amount).toLocaleString()}원`;
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'account-item-delete';
+    deleteBtn.innerHTML = '&times;';
+    deleteBtn.title = '삭제';
+    deleteBtn.addEventListener('click', () => {
+      if (confirm('이 내역을 삭제하시겠습니까?')) {
+        deleteAccountItem(dateKey, idx);
+      }
+    });
+    
+    amountDiv.appendChild(deleteBtn);
+    
+    itemDiv.appendChild(infoDiv);
+    itemDiv.appendChild(amountDiv);
+    accountList.appendChild(itemDiv);
+  });
+}
+
+// 가계부 내역 추가
+function addAccountItem() {
+  const amount = parseInt(accountAmountInput.value);
+  if (!amount || amount <= 0) {
+    alert('올바른 금액을 입력해 주세요.');
+    accountAmountInput.focus();
+    return;
+  }
+  
+  const category = accountCategoryInput.value.trim() || '기타';
+  const memo = accountMemoInput.value.trim();
+  
+  const dateKey = formatDateKey(
+    selectedAccountDate.getFullYear(),
+    selectedAccountDate.getMonth(),
+    selectedAccountDate.getDate()
+  );
+  
+  if (!accountData[dateKey]) {
+    accountData[dateKey] = [];
+  }
+  
+  accountData[dateKey].push({
+    type: currentAccountType,
+    amount: amount,
+    category: category,
+    memo: memo
+  });
+  
+  saveAccountData();
+  
+  // 폼 초기화
+  accountAmountInput.value = '';
+  accountCategoryInput.value = '';
+  accountMemoInput.value = '';
+  
+  // 갱신 및 리렌더링
+  renderAccountPanel();
+  render(); // 달력 셀 합계 실시간 반영을 위해 전체 렌더링 호출
+}
+
+// 가계부 내역 삭제
+function deleteAccountItem(dateKey, index) {
+  if (accountData[dateKey]) {
+    accountData[dateKey].splice(index, 1);
+    if (accountData[dateKey].length === 0) {
+      delete accountData[dateKey];
+    }
+    saveAccountData();
+    renderAccountPanel();
+    render(); // 달력 셀 합계 실시간 반영
+  }
+}
+
+// 월간 뷰
+// 두 일정이 동일한지 판단하는 함수 (연속성 판별 기준)
+function areSchedulesEqual(item1, item2) {
+  if (!item1 || !item2) return false;
+  return item1.text.trim() === item2.text.trim() &&
+         item1.completed === item2.completed &&
+         (item1.color || 'none') === (item2.color || 'none');
+}
+
+// 특정 날짜의 일정 목록 중 타겟 일정과 동일한 일정을 반환
+function findMatchingItem(dateStr, targetItem) {
+  const items = scheduleData[dateStr] || [];
+  return items.find(item => areSchedulesEqual(item, targetItem));
+}
+
+// 특정 일정이 해당 날짜 기준으로 전후 며칠 동안 연속되는지 계산
+function getScheduleContinuity(year, month, day, item) {
+  let count = 1;
+  let curr = new Date(year, month, day);
+  
+  // 과거 방향 탐색
+  while (true) {
+    curr.setDate(curr.getDate() - 1);
+    const prevKey = formatDateKey(curr.getFullYear(), curr.getMonth(), curr.getDate());
+    if (findMatchingItem(prevKey, item)) {
+      count++;
+    } else {
+      break;
+    }
+  }
+  
+  // 미래 방향 탐색
+  curr = new Date(year, month, day);
+  while (true) {
+    curr.setDate(curr.getDate() + 1);
+    const nextKey = formatDateKey(curr.getFullYear(), curr.getMonth(), curr.getDate());
+    if (findMatchingItem(nextKey, item)) {
+      count++;
+    } else {
+      break;
+    }
+  }
+  
+  return count;
 }
 
 // 월간 뷰
@@ -1028,20 +1379,64 @@ function renderMonthlyView() {
     
     const holidayName = SYSTEM_HOLIDAYS[dateKey];
     dayDiv.innerHTML = `<div class="${numClass}">${i}${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ''}</div>`;
-    const items = scheduleData[dateKey] || [];
     
-    if (items.length > 0) {
+    const rawItems = scheduleData[dateKey] || [];
+    
+    if (rawItems.length > 0) {
       const previewDiv = document.createElement('div');
       previewDiv.className = 'month-schedule-preview';
       
-      for(let j=0; j<Math.min(2, items.length); j++) {
+      // 연속된 일정 계산 및 매핑
+      const itemsWithContinuity = rawItems.map(item => {
+        const continuity = getScheduleContinuity(year, month, i, item);
+        return { ...item, continuity };
+      });
+      
+      // 정렬: 연속 기간(continuity)이 긴 일정이 위쪽 슬롯에 오도록 내림차순 정렬
+      // 동일할 경우 텍스트순 정렬하여 렌더링 세로 위치의 일관성 보장
+      itemsWithContinuity.sort((a, b) => {
+        if (b.continuity !== a.continuity) {
+          return b.continuity - a.continuity;
+        }
+        return a.text.localeCompare(b.text);
+      });
+      
+      for(let j=0; j<Math.min(2, itemsWithContinuity.length); j++) {
+        const item = itemsWithContinuity[j];
         const line = document.createElement('div');
         line.className = 'month-schedule-item';
-        if (items[j].completed) line.style.textDecoration = 'line-through';
-        line.textContent = items[j].text;
+        
+        // 형광펜 컬러 클래스 추가
+        if (item.color && item.color !== 'none') {
+          line.classList.add(`hl-${item.color}`);
+        }
+        
+        // 연속 일정 좌우 연결 판별
+        const yesterday = new Date(year, month, i);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayKey = formatDateKey(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate());
+        const hasYesterday = !!findMatchingItem(yesterdayKey, item);
+        const connectsLeft = hasYesterday && (currDayOfWeek !== startDayOfWeek);
+        
+        const tomorrow = new Date(year, month, i);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowKey = formatDateKey(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
+        const hasTomorrow = !!findMatchingItem(tomorrowKey, item);
+        const connectsRight = hasTomorrow && (currDayOfWeek !== (startDayOfWeek + 6) % 7);
+        
+        if (connectsLeft) line.classList.add('connect-left');
+        if (connectsRight) line.classList.add('connect-right');
+        
+        if (item.completed) {
+          line.style.textDecoration = 'line-through';
+          line.style.opacity = '0.5';
+        }
+        
+        line.textContent = item.text;
         previewDiv.appendChild(line);
       }
-      if (items.length > 2) {
+      
+      if (itemsWithContinuity.length > 2) {
         const line3 = document.createElement('div');
         line3.className = 'month-schedule-more';
         line3.textContent = '...';
@@ -1050,7 +1445,43 @@ function renderMonthlyView() {
       dayDiv.appendChild(previewDiv);
     }
     
-    dayDiv.addEventListener('click', () => setView('weekly', new Date(year, month, i)));
+    // 💰 해당 날짜 가계부 총계 요약 렌더링
+    const dayAccounts = accountData[dateKey] || [];
+    if (dayAccounts.length > 0) {
+      let dayInc = 0;
+      let dayExp = 0;
+      dayAccounts.forEach(item => {
+        if (item.type === 'income') dayInc += Number(item.amount);
+        else dayExp += Number(item.amount);
+      });
+      
+      if (dayInc > 0 || dayExp > 0) {
+        const accSummaryDiv = document.createElement('div');
+        accSummaryDiv.className = 'calendar-day-account';
+        if (dayInc > 0) {
+          const incDiv = document.createElement('div');
+          incDiv.className = 'inc';
+          incDiv.textContent = `▲${dayInc.toLocaleString()}`;
+          accSummaryDiv.appendChild(incDiv);
+        }
+        if (dayExp > 0) {
+          const expDiv = document.createElement('div');
+          expDiv.className = 'exp';
+          expDiv.textContent = `▼${dayExp.toLocaleString()}`;
+          accSummaryDiv.appendChild(expDiv);
+        }
+        dayDiv.appendChild(accSummaryDiv);
+      }
+    }
+    
+    dayDiv.addEventListener('click', () => {
+      if (!accountPanel.classList.contains('hidden')) {
+        selectedAccountDate = new Date(year, month, i);
+        renderAccountPanel();
+      } else {
+        setView('weekly', new Date(year, month, i));
+      }
+    });
     calendarGrid.appendChild(dayDiv);
   }
 }

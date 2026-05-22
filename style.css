@@ -269,7 +269,7 @@ footer p {
   border-radius: 6px;
   transition: all 0.2s;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  overflow: visible; /* 가로 음수 마진 연결을 위해 visible로 변경 */
 }
 
 .calendar-day:hover {
@@ -335,13 +335,81 @@ footer p {
 
 .month-schedule-item {
   font-family: var(--schedule-font);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-color);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
-  max-width: 80px;
+  line-height: 1.3;
+  padding: 2px 6px;
+  margin: 1px 0;
+  border-radius: 4px;
+  background-color: var(--item-bg);
+  border: 1px solid var(--border-color);
+  box-sizing: border-box;
+  position: relative;
+  transition: all 0.15s ease;
+  max-width: none; /* 연결 바 형태를 위해 가로 크기 제한 해제 */
+}
+
+/* 형광펜 색상 적용 */
+.month-schedule-item.hl-yellow {
+  background-color: rgba(255, 245, 157, 0.5);
+  border-color: rgba(255, 245, 157, 0.9);
+}
+.month-schedule-item.hl-pink {
+  background-color: rgba(244, 143, 177, 0.5);
+  border-color: rgba(244, 143, 177, 0.9);
+}
+.month-schedule-item.hl-green {
+  background-color: rgba(165, 214, 167, 0.5);
+  border-color: rgba(165, 214, 167, 0.9);
+}
+
+/* 다크모드 대응 형광펜 색상 */
+.dark-mode .month-schedule-item.hl-yellow {
+  background-color: rgba(255, 245, 157, 0.2);
+  border-color: rgba(255, 245, 157, 0.5);
+}
+.dark-mode .month-schedule-item.hl-pink {
+  background-color: rgba(244, 143, 177, 0.2);
+  border-color: rgba(244, 143, 177, 0.5);
+}
+.dark-mode .month-schedule-item.hl-green {
+  background-color: rgba(165, 214, 167, 0.2);
+  border-color: rgba(165, 214, 167, 0.5);
+}
+
+/* 연속 일정 가로 연결 스타일 */
+.month-schedule-item.connect-left {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -11px; /* padding 8px + gap 5px의 절반을 커버하도록 설정 */
+  padding-left: 11px;
+}
+
+.month-schedule-item.connect-right {
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: -11px; /* padding 8px + gap 5px의 절반을 커버하도록 설정 */
+  padding-right: 11px;
+}
+
+.month-schedule-item.connect-left.connect-right {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  margin-left: -11px;
+  margin-right: -11px;
+  padding-left: 11px;
+  padding-right: 11px;
+}
+
+.month-schedule-item.connect-left,
+.month-schedule-item.connect-right {
+  z-index: 2;
 }
 
 .month-schedule-more {
@@ -1127,6 +1195,24 @@ body.has-banner #memo-panel {
     max-width: 100%;
   }
 
+  /* 모바일 환경에 최적화된 연속 일정 음수 마진/패딩 재정의 */
+  .month-schedule-item.connect-left {
+    margin-left: -6px; /* 모바일 padding 3px + gap 3px의 절반을 커버하도록 설정 */
+    padding-left: 6px;
+  }
+
+  .month-schedule-item.connect-right {
+    margin-right: -6px;
+    padding-right: 6px;
+  }
+
+  .month-schedule-item.connect-left.connect-right {
+    margin-left: -6px;
+    margin-right: -6px;
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+
   #search-panel, #memo-panel {
     position: fixed;
     top: 50%;
@@ -1297,4 +1383,506 @@ body.has-banner #memo-panel {
 #mobile-delete-btn {
   color: #f44336;
   font-size: 1.8rem;
+}
+
+/* ==========================================
+   💰 가계부 (Ledger) 사이드 패널 및 셀 연동 스타일
+   ========================================== */
+#account-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 320px;
+  height: 100vh;
+  background-color: var(--surface-color);
+  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.15);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-color);
+}
+
+#account-panel.hidden {
+  transform: translateX(100%);
+}
+
+.account-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.account-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+}
+
+#close-account-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  color: var(--text-color);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+#close-account-btn:hover {
+  opacity: 1;
+}
+
+/* 요약 카드 대시보드 */
+.account-summary-card {
+  background: var(--item-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.summary-month-title {
+  font-weight: bold;
+  font-size: 1.15rem;
+  margin-bottom: 12px;
+  color: var(--line-color);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-item .label, .summary-balance .label {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-bottom: 3px;
+  font-weight: 500;
+}
+
+.summary-item .val {
+  font-size: 1.15rem;
+  font-weight: bold;
+  font-family: var(--schedule-font), sans-serif;
+}
+
+.summary-item.inc .val {
+  color: #1e88e5; /* 수입 파랑 */
+}
+
+.summary-item.exp .val {
+  color: #e53935; /* 지출 빨강 */
+}
+
+.dark-mode .summary-item.inc .val {
+  color: #64b5f6;
+}
+
+.dark-mode .summary-item.exp .val {
+  color: #ef5350;
+}
+
+.summary-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 10px;
+}
+
+.summary-balance .val {
+  font-size: 1.25rem;
+  font-weight: bold;
+  font-family: var(--schedule-font), sans-serif;
+  color: var(--text-color);
+}
+
+/* 입력 폼 */
+.account-form-section h3, .account-list-section h3 {
+  font-size: 1.15rem;
+  margin-bottom: 15px;
+  font-weight: 500;
+  border-left: 3px solid var(--line-color);
+  padding-left: 8px;
+  color: var(--text-color);
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.type-btn {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+  color: var(--text-color);
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.type-btn[data-type="expense"].active {
+  background-color: #ffebee;
+  border-color: #f44336;
+  color: #d32f2f;
+  box-shadow: inset 0 1px 3px rgba(244, 67, 54, 0.1);
+}
+
+.type-btn[data-type="income"].active {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+  color: #1976d2;
+  box-shadow: inset 0 1px 3px rgba(33, 150, 243, 0.1);
+}
+
+.dark-mode .type-btn[data-type="expense"].active {
+  background-color: #3e2723;
+  border-color: #e53935;
+  color: #ef5350;
+}
+
+.dark-mode .type-btn[data-type="income"].active {
+  background-color: #0d47a1;
+  border-color: #1e88e5;
+  color: #64b5f6;
+}
+
+.input-row input {
+  width: 100%;
+  padding: 8px 4px;
+  border: none;
+  border-bottom: 1px solid var(--input-border);
+  background: transparent;
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 1.15rem;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-bottom-color 0.2s;
+}
+
+.input-row input:focus {
+  border-bottom-color: var(--line-color);
+}
+
+/* 상세 리스트 */
+.account-list-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 200px;
+}
+
+#account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  flex: 1;
+  max-height: 350px;
+  padding-right: 2px;
+}
+
+.account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--item-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.account-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.account-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0; /* 넘침 방지 */
+}
+
+.account-item-cat-memo {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 0.95rem;
+  min-width: 0;
+}
+
+.account-item-cat {
+  background: rgba(0, 0, 0, 0.06);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-color);
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+.dark-mode .account-item-cat {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.account-item-memo {
+  opacity: 0.65;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-item-amount {
+  font-weight: bold;
+  font-size: 1.15rem;
+  font-family: var(--schedule-font), sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.account-item.expense .account-item-amount {
+  color: #e53935;
+}
+
+.account-item.income .account-item-amount {
+  color: #1e88e5;
+}
+
+.dark-mode .account-item.expense .account-item-amount {
+  color: #ef5350;
+}
+
+.dark-mode .account-item.income .account-item-amount {
+  color: #64b5f6;
+}
+
+.account-item-delete {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: #aaa;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+
+.account-item-delete:hover {
+  color: #e53935;
+}
+
+/* ==========================================
+   💰 달력 셀 내부 수입/지출 표시 요약 스타일
+   ========================================== */
+.calendar-day-account {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.9rem;
+  font-family: var(--schedule-font), sans-serif;
+  line-height: 1;
+  margin-top: auto;
+  align-items: flex-end;
+  font-weight: bold;
+  pointer-events: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calendar-day-account div {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.calendar-day-account .inc {
+  color: #1e88e5;
+}
+
+.calendar-day-account .exp {
+  color: #e53935;
+}
+
+.dark-mode .calendar-day-account .inc {
+  color: #64b5f6;
+}
+
+.dark-mode .calendar-day-account .exp {
+  color: #ef5350;
+}
+
+/* 가계부 일자 네비게이터 스마트 UI 스타일 */
+.account-date-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: var(--item-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  padding: 6px 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.date-nav-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  color: var(--line-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.date-nav-btn:hover {
+  background-color: var(--border-color);
+  transform: scale(1.15);
+}
+
+.date-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.date-title-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+#account-date-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-color);
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line-color);
+  padding: 2px 4px;
+  transition: all 0.2s;
+  user-select: none;
+  text-align: center;
+}
+
+#account-date-title:hover {
+  color: var(--line-color);
+  border-bottom-style: solid;
+  transform: translateY(-1px);
+}
+
+/* 숨겨진 네이티브 데이트 피커 */
+.hidden-date-picker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 모바일 전용 반응형 대응 고도화 */
+@media (max-width: 900px) {
+  #account-panel {
+    width: 300px;
+    padding: 15px;
+  }
+}
+
+@media (max-width: 600px) {
+  #account-panel {
+    width: 100vw;
+    height: 100vh;
+    border-left: none;
+    padding: 20px;
+    border-radius: 0;
+  }
+
+  /* 닫기 버튼 모바일 터치 접근성 향상 */
+  #close-account-btn {
+    font-size: 2.2rem;
+    padding: 10px;
+    line-height: 1;
+    margin-top: -10px;
+    margin-right: -10px;
+  }
+
+  .account-header h2 {
+    font-size: 1.6rem;
+  }
+
+  /* 터치하기 편한 큰 입력 폼 크기 */
+  .type-btn {
+    padding: 12px 10px;
+    font-size: 1.05rem;
+    border-radius: 6px;
+  }
+
+  .input-row input {
+    padding: 12px 6px;
+    font-size: 1.25rem;
+  }
+
+  .action-btn {
+    padding: 14px;
+    font-size: 1.1rem;
+    border-radius: 8px;
+  }
+
+  /* 상세 내역 카드 볼륨 업 */
+  .account-item {
+    padding: 14px 16px;
+    border-radius: 8px;
+  }
+
+  .account-item-cat {
+    font-size: 0.95rem;
+    padding: 4px 10px;
+  }
+
+  .account-item-amount {
+    font-size: 1.2rem;
+  }
+
+  .account-item-delete {
+    font-size: 1.8rem;
+    padding: 4px 8px;
+  }
 }

@@ -53,6 +53,7 @@
         <button id="search-btn" title="검색">🔍</button>
         <button id="settings-btn" title="설정">⚙️</button>
         <button id="memo-btn" title="메모">📝</button>
+        <button id="account-btn" title="가계부">💰</button>
         <button id="login-btn" title="구글 로그인" style="background-color: #4285F4; color: white;">로그인</button>
         <button id="logout-btn" title="로그아웃" class="hidden">로그아웃</button>
       </div>
@@ -150,6 +151,79 @@
     </div>
     <div id="memo-list">
       <!-- JS로 메모 항목이 추가됨 -->
+    </div>
+  </aside>
+
+  <!-- 사이드 가계부 패널 -->
+  <aside id="account-panel" class="hidden">
+    <div class="account-header">
+      <h2>가계부</h2>
+      <button id="close-account-btn" title="닫기">&times;</button>
+    </div>
+    
+    <!-- 월 대시보드 통계 -->
+    <div class="account-summary-card">
+      <div class="summary-month-title"><span id="summary-month-val">5</span>월 총계</div>
+      <div class="summary-grid">
+        <div class="summary-item inc">
+          <span class="label">수입</span>
+          <span id="month-total-income" class="val">0원</span>
+        </div>
+        <div class="summary-item exp">
+          <span class="label">지출</span>
+          <span id="month-total-expense" class="val">0원</span>
+        </div>
+      </div>
+      <div class="summary-balance">
+        <span class="label">잔액</span>
+        <span id="month-total-balance" class="val">0원</span>
+      </div>
+    </div>
+
+    <!-- 일자별 가계부 추가 폼 -->
+    <div class="account-form-section">
+      <div class="account-date-nav">
+        <button id="account-prev-day-btn" title="이전 날짜" class="date-nav-btn">◀</button>
+        <div class="date-title-container">
+          <h3 id="account-date-title" title="클릭하여 날짜 변경">2026년 5월 22일 내역</h3>
+          <input type="date" id="account-date-picker" class="hidden-date-picker">
+        </div>
+        <button id="account-next-day-btn" title="다음 날짜" class="date-nav-btn">▶</button>
+      </div>
+      <div class="account-form">
+        <div class="form-row type-selector">
+          <button id="type-expense-btn" class="type-btn active" data-type="expense">지출</button>
+          <button id="type-income-btn" class="type-btn" data-type="income">수입</button>
+        </div>
+        <div class="form-row input-row">
+          <input type="number" id="account-amount-input" placeholder="금액 입력 (원)" min="0">
+        </div>
+        <div class="form-row input-row">
+          <input type="text" id="account-category-input" placeholder="카테고리 (예: 식비, 교통, 급여)" list="category-suggestions">
+          <datalist id="category-suggestions">
+            <option value="식비">
+            <option value="교통비">
+            <option value="쇼핑">
+            <option value="마트/주거">
+            <option value="문화/여가">
+            <option value="급여">
+            <option value="용돈">
+            <option value="기타">
+          </datalist>
+        </div>
+        <div class="form-row input-row">
+          <input type="text" id="account-memo-input" placeholder="메모 (선택사항)">
+        </div>
+        <button id="add-account-item-btn" class="action-btn">내역 추가</button>
+      </div>
+    </div>
+
+    <!-- 오늘 내역 리스트 -->
+    <div class="account-list-section">
+      <h3>상세 내역</h3>
+      <div id="account-list">
+        <!-- JS로 가계부 항목 추가 -->
+      </div>
     </div>
   </aside>
 
